@@ -67,7 +67,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   
   // Context value
   const value = {
-    currentSubscription,
+    currentSubscription: currentSubscription ?? null, // Ensure it's always Subscription | null (not undefined)
     subscriptionPlans,
     loading,
     error,
