@@ -21,7 +21,6 @@
   from = "/profile"
   to = "/dashboard/profile"
   status = 301
-  status = 301
   force = true
 
 [[redirects]]
