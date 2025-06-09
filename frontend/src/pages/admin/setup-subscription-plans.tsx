@@ -18,7 +18,7 @@ const SetupSubscriptionPlansPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await api.post('/api/admin/create-subscription-plans');
+      const response = await api.post<{results: any}>('/api/admin/create-subscription-plans', {});
       setResults(response.results);
       
       // Refresh subscription plans list

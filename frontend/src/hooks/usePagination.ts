@@ -20,6 +20,11 @@ export function usePagination({
   const [limit, setLimit] = useState<number>(initialLimit);
   const [total, setTotal] = useState<number>(totalItems);
 
+  // Calculate total pages
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(total / limit));
+  }, [total, limit]);
+
   /**
    * Go to next page
    */
@@ -83,10 +88,7 @@ export function usePagination({
     setLimit(initialLimit);
   }, [initialPage, initialLimit]);
 
-  // Calculate total pages
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(total / limit));
-  }, [total, limit]);
+  // Offset is already calculated above
 
   // Calculate offset for API queries
   const offset = useMemo(() => {

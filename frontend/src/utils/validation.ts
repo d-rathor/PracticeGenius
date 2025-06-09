@@ -60,7 +60,7 @@ const validation = {
    * @returns True if valid, false otherwise
    */
   minLength: (str: string, minLength: number): boolean => {
-    return str && str.length >= minLength;
+    return Boolean(str) && str.length >= minLength;
   },
   
   /**

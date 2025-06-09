@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card } from '@/components/ui/Card';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 
 interface UserProfile {
   id: string;
@@ -155,7 +155,7 @@ const ProfilePage: React.FC = () => {
           <>
             {/* Profile Overview */}
             <Card>
-              <Card.Header>
+              <CardHeader>
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Profile Information</h2>
                   {!isEditing && (
@@ -167,8 +167,8 @@ const ProfilePage: React.FC = () => {
                     </button>
                   )}
                 </div>
-              </Card.Header>
-              <Card.Content>
+              </CardHeader>
+              <CardContent>
                 {isEditing ? (
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -340,15 +340,15 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </Card.Content>
+              </CardContent>
             </Card>
             
             {/* Security Section */}
             <Card>
-              <Card.Header>
+              <CardHeader>
                 <h2 className="text-xl font-semibold">Security</h2>
-              </Card.Header>
-              <Card.Content>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Password</p>
@@ -359,7 +359,7 @@ const ProfilePage: React.FC = () => {
                     Change Password
                   </button>
                 </div>
-              </Card.Content>
+              </CardContent>
             </Card>
           </>
         )}
