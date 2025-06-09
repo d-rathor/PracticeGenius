@@ -20,11 +20,11 @@ export function withAuth<P extends object>(
 
   const WithAuth = (props: P) => {
     const router = useRouter();
-    const { isAuthenticated, isAdmin, loading } = useAuthContext();
+    const { isAuthenticated, isAdmin, isLoading } = useAuthContext();
 
     useEffect(() => {
       // If authentication check is complete
-      if (!loading) {
+      if (!isLoading) {
         // If not authenticated, redirect to login
         if (!isAuthenticated) {
           router.replace({
@@ -37,10 +37,10 @@ export function withAuth<P extends object>(
           router.replace('/dashboard');
         }
       }
-    }, [isAuthenticated, isAdmin, loading, router, redirectTo]);
+    }, [isAuthenticated, isAdmin, isLoading, router, redirectTo]);
 
     // Show loading spinner while checking authentication
-    if (loading || (!isAuthenticated || (adminOnly && !isAdmin))) {
+    if (isLoading || (!isAuthenticated || (adminOnly && !isAdmin))) {
       return (
         <div className="flex h-screen w-full items-center justify-center">
           <LoadingSpinner size="large" />
