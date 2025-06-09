@@ -1,24 +1,26 @@
 [build]
   command = "npm run build"
   publish = ".next"
-  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Redirects for SPA routing
+# Next.js specific settings
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Handle all routes with Next.js
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/next"
   status = 200
-  force = false
-  conditions = {Role = ["anonymous"]}
 
 # Specific redirects for critical paths
 [[redirects]]
   from = "/profile"
   to = "/dashboard/profile"
+  status = 301
   status = 301
   force = true
 
