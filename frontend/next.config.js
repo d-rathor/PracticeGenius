@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable output tracing for Netlify
+  output: 'standalone',
   reactStrictMode: true,
   // Removed swcMinify as it's no longer recognized in Next.js 15.3.3
   images: {
