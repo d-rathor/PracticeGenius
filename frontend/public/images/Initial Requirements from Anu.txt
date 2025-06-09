@@ -1,0 +1,25 @@
+1) Subscribe will allow access to worksheets
+2) Address can be removed
+3) Upload/modify functionaly for worksheets - Admin (Anu)
+4) UI to view all worksheet - modify them, add new ones, define their labels, categorize them by class/subject
+Worksheets should be searchable by any keywords appearing in the worksheet as well as Title, Grade, Subject topics
+5) Search feature- be able to search by key words. 
+6) practicegenius.online - Buy this domain
+7) Kids/Parents image on 1st page
+8) Allow download sample worksheets 
+9) Subscription model - 
+Basic and Premium 
+Basic = 5 worksheets (Access to all subjects for a particular grade)'
+Premium =10 worksheets 
+10) How the payment will get deposited in Bank account
+11) How do we keep it flexible grades - KGs/higher classes
+
+Look up other websites on worksheets
+
+
+Subscription/Sample buttons on Home page in big 
+50% off on front page
+
+Create a folder - all features in that Xl
+Create logo for PracticeGenius
+Create folder for uploading worksheets by grade/subject

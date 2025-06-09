@@ -1,0 +1,43 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20.11.1"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Redirects for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+  conditions = {Role = ["anonymous"]}
+
+# Specific redirects for critical paths
+[[redirects]]
+  from = "/profile"
+  to = "/dashboard/profile"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/settings"
+  to = "/dashboard/settings"
+  status = 301
+  force = true
+
+# API proxy for local development
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:8080/api/:splat"
+  status = 200
+  force = false
+  conditions = {Role = ["anonymous"], Environment = ["development"]}
+
+# Proper 404 handling
+[[redirects]]
+  from = "/*"
+  to = "/404"
+  status = 404

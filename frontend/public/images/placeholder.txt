@@ -1,0 +1,7 @@
+This is a placeholder file. Replace with actual images:
+
+1. hero-worksheet.png - Main hero image showing worksheet examples
+2. logo.png - PracticeGenius logo
+3. testimonial-avatars - User profile images for testimonials
+
+Note: When deploying, ensure these images are properly optimized for web use.
