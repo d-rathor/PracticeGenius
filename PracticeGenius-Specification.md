@@ -702,10 +702,93 @@ Fixed critical issues in the admin worksheet management interface to ensure prop
 - Create protected routes with Next.js middleware
 
 ### 5. Deployment Configuration
-- Ensure proper Netlify configuration
-- Set NODE_VERSION to 20.11.1+ in netlify.toml
-- Configure redirects in both Next.js middleware and netlify.toml
-- Set up proper build commands and environment variables
+
+#### GitHub Repository Setup
+- **Repository**: The project is hosted on GitHub at `https://github.com/d-rathor/PracticeGenius`
+- **Branch Structure**: Main branch is used for production deployment
+- **Git Configuration**:
+  ```bash
+  # Initialize Git repository
+  git init
+  
+  # Add remote origin
+  git remote add origin https://github.com/d-rathor/PracticeGenius.git
+  
+  # Create .gitignore file to exclude node_modules, .env files, etc.
+  # Commit and push code to GitHub
+  git add .
+  git commit -m "Initial commit"
+  git push -u origin main
+  ```
+
+#### Netlify Deployment
+- **Deployment URL**: The application is deployed at `https://practicegeniusv2.netlify.app/`
+- **Build Configuration**:
+  - **Build command**: `npm run build`
+  - **Publish directory**: `.next`
+  - **Base directory**: `frontend`
+- **Environment Variables**:
+  - `NODE_VERSION`: `20.11.1` (Required for Next.js 15.3.3)
+  - `NPM_FLAGS`: `--legacy-peer-deps` (For package compatibility)
+  - `NEXT_PUBLIC_API_URL`: URL of the backend API
+
+#### Netlify Configuration Files
+- **netlify.toml**:
+  ```toml
+  [build]
+    base = "frontend"
+    command = "npm run build"
+    publish = ".next"
+  
+  [build.environment]
+    NODE_VERSION = "20.11.1"
+    NPM_FLAGS = "--legacy-peer-deps"
+  
+  # Next.js specific settings
+  [[plugins]]
+    package = "@netlify/plugin-nextjs"
+  
+  # Handle all routes with Next.js
+  [[redirects]]
+    from = "/*"
+    to = "/.netlify/functions/next"
+    status = 200
+  
+  # Specific redirects for critical paths
+  [[redirects]]
+    from = "/profile"
+    to = "/dashboard/profile"
+    status = 301
+    force = true
+  ```
+
+- **_redirects** (in public directory):
+  ```
+  /* /index.html 200
+  ```
+
+- **next.config.js** (Netlify-specific settings):
+  ```javascript
+  /** @type {import('next').NextConfig} */
+  const nextConfig = {
+    // Enable output tracing for Netlify
+    output: 'standalone',
+    // Other Next.js configuration...
+  };
+  ```
+
+#### Deployment Troubleshooting
+- **TypeScript Errors**: Fixed various TypeScript errors that prevented successful builds:
+  - Fixed property name mismatch in `withAuth.tsx` (`loading` → `isLoading`)
+  - Fixed `totalPages` being used before declaration in `usePagination.ts`
+  - Fixed API call missing data parameter in `setup-subscription-plans.tsx`
+  - Fixed Card component usage in `profile.tsx` (using individual exports instead of dot notation)
+  - Fixed type issues in `validation.ts` by ensuring boolean return types
+  - Fixed `currentSubscription` type in `SubscriptionContext.tsx` to handle undefined values
+
+- **Node.js Version**: Ensured Node.js 20.11.1 or higher is used for compatibility with Next.js 15.3.3
+
+- **Routing Issues**: Implemented proper redirects in both Next.js configuration and Netlify configuration files
 
 ### 6. Testing & Quality Assurance
 - Test all user flows and functionality
