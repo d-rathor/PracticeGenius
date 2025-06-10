@@ -1,0 +1,15 @@
+{
+  "name": "practicegenius",
+  "version": "1.0.0",
+  "description": "PracticeGenius - Educational Platform",
+  "scripts": {
+    "install": "cd backend && npm install",
+    "start": "cd backend && node debug-server.js",
+    "build": "echo \"Skipping build for debug server\"",
+    "health": "cd backend && node health-check.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "private": true
+}

@@ -2,8 +2,9 @@ services:
   - type: web
     name: practicegenius-api
     env: node
-    buildCommand: echo "Skipping build for debug server"
-    startCommand: node debug-server.js
+    rootDir: ./
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
