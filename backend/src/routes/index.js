@@ -6,6 +6,10 @@ const worksheetRoutes = require('./worksheet.routes');
 const subscriptionRoutes = require('./subscription.routes');
 const subscriptionPlanRoutes = require('./subscription-plan.routes');
 const settingsRoutes = require('./settings.routes');
+const healthRoutes = require('./health.routes');
+
+// Health check route (must be first)
+router.use(healthRoutes);
 
 // Welcome route
 router.get('/', (req, res) => {

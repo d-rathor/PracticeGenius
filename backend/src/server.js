@@ -71,17 +71,22 @@ try {
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
   console.log(`API available at http://localhost:${PORT}`);
+  console.log(`Health check available at http://0.0.0.0:${PORT}/health`);
   
-  console.log('Attempting to connect to MongoDB Atlas...');
-  
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      console.log('MongoDB connected successfully');
-    })
-    .catch(err => {
-      console.error('MongoDB connection error:', err);
-      console.log('Running server without MongoDB connection. Some features may not work.');
-    });
+  // MongoDB connection is not required for health check
+  if (process.env.SKIP_MONGO !== 'true') {
+    console.log('Attempting to connect to MongoDB Atlas...');
+    mongoose.connect(MONGODB_URI)
+      .then(() => {
+        console.log('MongoDB connected successfully');
+      })
+      .catch(err => {
+        console.error('MongoDB connection error:', err);
+        console.log('Running server without MongoDB connection. Some features may not work.');
+      });
+  } else {
+    console.log('Skipping MongoDB connection (SKIP_MONGO=true)');
+  }
 });
 
 // Error handling middleware
