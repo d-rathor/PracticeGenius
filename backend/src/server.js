@@ -9,6 +9,11 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
+// Root health check endpoint for Render - must be before all other middleware
+app.get('/health', (req, res) => {
+  res.status(200).set('Content-Type', 'text/plain').send('OK');
+});
+
 // Middleware
 // Configure CORS to accept all origins during development
 app.use(cors({
@@ -33,7 +38,7 @@ if (NODE_ENV === 'development') {
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Basic health route
+// API health route
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -41,11 +46,6 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     mongoDbConnected: mongoose.connection.readyState === 1
   });
-});
-
-// Root health check endpoint for Render
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
 });
 
 // Root route
