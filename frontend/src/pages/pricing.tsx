@@ -18,7 +18,15 @@ const PricingPage: React.FC = () => {
     const fetchPrices = async () => {
       try {
         setIsLoading(true);
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/pricing`;
+        // Determine if we're in development or production
+        const isDev = process.env.NODE_ENV === 'development';
+        
+        // Use direct URLs for both environments
+        const apiUrl = isDev 
+          ? 'http://localhost:8080/api/pricing' 
+          : 'https://practicegenius-api.onrender.com/api/pricing';
+        
+        console.log('Fetching pricing from:', apiUrl, 'Environment:', process.env.NODE_ENV);
         
         try {
           const response = await fetch(apiUrl);

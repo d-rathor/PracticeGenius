@@ -39,8 +39,8 @@ const WorksheetsPage: React.FC = () => {
         
         // Use relative URL for local development, direct URL for production
         const apiUrl = isDev 
-          ? '/api/worksheets' 
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/worksheets`;
+          ? 'http://localhost:8080/api/worksheets' 
+          : 'https://practicegenius-api.onrender.com/api/worksheets';
         
         console.log('Fetching worksheets from:', apiUrl, 'Environment:', process.env.NODE_ENV);
         

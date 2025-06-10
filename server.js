@@ -1,4 +1,4 @@
-console.log('Starting minimal server...');
+console.log('Starting minimal server - ' + new Date().toISOString());
 console.log('Environment:', {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
