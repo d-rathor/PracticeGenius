@@ -24,7 +24,55 @@ const PricingPage: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(true);
   const { isAuthenticated } = useAuthContext();
 
-  // Authentication state is now handled by useAuthContext
+  // Define mock pricing plans outside the effect to make it accessible throughout the component
+  const getMockPricingPlans = (isAnnualBilling: boolean): PricingPlan[] => [
+    {
+      id: 'basic',
+      name: 'Basic',
+      price: isAnnualBilling ? 9.99 : 12.99,
+      interval: isAnnualBilling ? 'month' : 'month',
+      description: 'Perfect for individual students or parents',
+      features: [
+        'Access to 100+ basic worksheets',
+        'Download up to 10 worksheets per month',
+        'Basic progress tracking',
+        'Email support'
+      ]
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      price: isAnnualBilling ? 19.99 : 24.99,
+      interval: isAnnualBilling ? 'month' : 'month',
+      description: 'Great for families and homeschooling',
+      features: [
+        'Access to 500+ premium worksheets',
+        'Unlimited downloads',
+        'Advanced progress tracking',
+        'Priority email support',
+        'Customizable worksheets',
+        'Up to 3 student profiles'
+      ],
+      isPopular: true
+    },
+    {
+      id: 'pro',
+      name: 'Professional',
+      price: isAnnualBilling ? 49.99 : 59.99,
+      interval: isAnnualBilling ? 'month' : 'month',
+      description: 'Ideal for teachers and educational institutions',
+      features: [
+        'Access to all 1,000+ worksheets',
+        'Unlimited downloads',
+        'Comprehensive progress tracking',
+        'Priority phone and email support',
+        'Customizable worksheets',
+        'Unlimited student profiles',
+        'Bulk worksheet generation',
+        'Advanced analytics'
+      ]
+    }
+  ];
 
   useEffect(() => {
     const fetchPricingPlans = async () => {
@@ -33,54 +81,7 @@ const PricingPage: React.FC = () => {
         
         // Use mock data directly in development to avoid API call errors
         if (process.env.NODE_ENV === 'development') {
-          const mockPricingPlans = [
-            {
-              id: 'basic',
-              name: 'Basic',
-              price: isAnnual ? 9.99 : 12.99,
-              interval: isAnnual ? 'month' : 'month',
-              description: 'Perfect for individual students or parents',
-              features: [
-                'Access to 100+ basic worksheets',
-                'Download up to 10 worksheets per month',
-                'Basic progress tracking',
-                'Email support'
-              ]
-            },
-            {
-              id: 'premium',
-              name: 'Premium',
-              price: isAnnual ? 19.99 : 24.99,
-              interval: isAnnual ? 'month' : 'month',
-              description: 'Great for families and homeschooling',
-              features: [
-                'Access to 500+ premium worksheets',
-                'Unlimited downloads',
-                'Advanced progress tracking',
-                'Priority email support',
-                'Customizable worksheets',
-                'Up to 3 student profiles'
-              ],
-              isPopular: true
-            },
-            {
-              id: 'pro',
-              name: 'Professional',
-              price: isAnnual ? 49.99 : 59.99,
-              interval: isAnnual ? 'month' : 'month',
-              description: 'Ideal for teachers and educational institutions',
-              features: [
-                'Access to all 1,000+ worksheets',
-                'Unlimited downloads',
-                'Comprehensive progress tracking',
-                'Priority phone and email support',
-                'Customizable worksheets',
-                'Unlimited student profiles',
-                'Bulk worksheet generation',
-                'Advanced analytics'
-              ]
-            }
-          ];
+          const mockPricingPlans = getMockPricingPlans(isAnnual);
           setPricingPlans(mockPricingPlans);
           setIsLoading(false);
           return;
@@ -95,11 +96,24 @@ const PricingPage: React.FC = () => {
         }
         
         const data = await response.json();
-        setPricingPlans(data);
+        
+        // Ensure data is an array before setting it
+        if (Array.isArray(data)) {
+          setPricingPlans(data);
+        } else if (data && typeof data === 'object' && data.plans && Array.isArray(data.plans)) {
+          // Handle case where API returns { plans: [...] } structure
+          setPricingPlans(data.plans);
+        } else {
+          // If API returns unexpected format, use mock data instead
+          console.error('API returned unexpected data format:', data);
+          setPricingPlans(getMockPricingPlans(isAnnual));
+          setError('Unable to load pricing plans from server. Showing default plans instead.');
+        }
         setIsLoading(false);
       } catch (err) {
         console.error('Failed to fetch pricing plans:', err);
         setError('Failed to load pricing plans. Please try again later.');
+        setPricingPlans(getMockPricingPlans(isAnnual));
         setIsLoading(false);
       }
     };

@@ -3,6 +3,10 @@ const nextConfig = {
   // Enable output tracing for Netlify
   output: 'standalone',
   reactStrictMode: true,
+  // Fix for static asset paths in production
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/' : '',
+  // Ensure base path is set correctly
+  basePath: '',
   // Removed swcMinify as it's no longer recognized in Next.js 15.3.3
   images: {
     // Replaced domains with remotePatterns as per Next.js 15.3.3 recommendation
