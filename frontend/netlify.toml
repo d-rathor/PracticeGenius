@@ -6,6 +6,7 @@
 [build.environment]
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--legacy-peer-deps"
+  NEXT_PUBLIC_API_URL = "https://practicegenius-api.onrender.com"
 
 # Next.js specific settings
 [[plugins]]
