@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: practicegenius-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm run health
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: 30d
+      - key: FRONTEND_URL
+        value: https://practicegeniusv2.netlify.app
+      - key: CORS_ORIGIN
+        value: https://practicegeniusv2.netlify.app
+    healthCheckPath: /health
+    healthCheckTimeout: 10s
+    healthCheckInterval: 60s
+    healthCheckThreshold: 3

@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "health": "node health-check.js",
+    "start:health": "node health-check.js",
     "dev": "nodemon server.js",
     "start:server": "node start-server.js",
     "seed": "node src/utils/seed.js",
