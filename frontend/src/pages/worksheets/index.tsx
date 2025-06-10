@@ -34,9 +34,15 @@ const WorksheetsPage: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // Fetch real data from the API - use relative URL to leverage Netlify redirects
-        const apiUrl = `/api/worksheets`;
-        console.log('Fetching worksheets from:', apiUrl);
+        // Determine if we're in development or production
+        const isDev = process.env.NODE_ENV === 'development';
+        
+        // Use relative URL for local development, direct URL for production
+        const apiUrl = isDev 
+          ? '/api/worksheets' 
+          : `${process.env.NEXT_PUBLIC_API_URL}/api/worksheets`;
+        
+        console.log('Fetching worksheets from:', apiUrl, 'Environment:', process.env.NODE_ENV);
         
         const response = await fetch(apiUrl, {
           headers: {
