@@ -2,7 +2,6 @@ services:
   - type: web
     name: practicegenius-api
     env: node
-    rootDir: ./
     buildCommand: npm install
     startCommand: npm start
     envVars:
@@ -10,21 +9,8 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: MONGODB_URI
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: JWT_EXPIRES_IN
-        value: 7d
-      - key: FRONTEND_URL
-        value: https://practicegeniusv2.netlify.app
-      - key: CORS_ORIGIN
-        value: https://practicegeniusv2.netlify.app
     # Health check settings - accept any path
     healthCheckPath: /
     healthCheckTimeout: 30s
     healthCheckInterval: 60s
     healthCheckThreshold: 3
-    autoDeploy: true
-    plan: free
-    region: oregon

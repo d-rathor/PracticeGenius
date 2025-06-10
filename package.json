@@ -2,11 +2,10 @@
   "name": "practicegenius",
   "version": "1.0.0",
   "description": "PracticeGenius - Educational Platform",
+  "main": "server.js",
   "scripts": {
-    "install": "cd backend && npm install",
-    "start": "cd backend && node debug-server.js",
-    "build": "echo \"Skipping build for debug server\"",
-    "health": "cd backend && node health-check.js"
+    "start": "node server.js",
+    "test": "echo \"No tests configured\" && exit 0"
   },
   "engines": {
     "node": ">=20.0.0"
