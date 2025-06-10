@@ -9,9 +9,22 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
-// Root health check endpoint for Render - must be before all other middleware
+// Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
   res.status(200).set('Content-Type', 'text/plain').send('OK');
+});
+
+// Handle Render's health check with port in URL
+app.get('/:port/health', (req, res) => {
+  res.status(200).set('Content-Type', 'text/plain').send('OK');
+});
+
+// Root path health check
+app.get('/', (req, res, next) => {
+  if (req.path === '/health' || req.path.endsWith('/health')) {
+    return res.status(200).set('Content-Type', 'text/plain').send('OK');
+  }
+  next();
 });
 
 // Middleware
