@@ -6,7 +6,7 @@
 [build.environment]
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--legacy-peer-deps"
-  NEXT_PUBLIC_API_URL = "https://practicegenius-api.onrender.com"
+  NEXT_PUBLIC_API_URL = "https://practicegeniusv2.netlify.app"
 
 # Next.js specific settings
 [[plugins]]
@@ -30,6 +30,14 @@
   to = "/dashboard/settings"
   status = 301
   force = true
+
+# API proxy for production
+[[redirects]]
+  from = "/api/*"
+  to = "https://practicegenius-api.onrender.com/api/:splat"
+  status = 200
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"}
 
 # API proxy for local development
 [[redirects]]
