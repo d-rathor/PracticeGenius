@@ -43,6 +43,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Root route
 app.get('/', (req, res) => {
   res.json({
