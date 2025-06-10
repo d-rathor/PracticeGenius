@@ -1,8 +1,17 @@
-console.log('Starting minimal server - ' + new Date().toISOString());
-console.log('Environment:', {
+console.log('=== STARTING PRACTICE GENIUS API ===');
+console.log('Timestamp:', new Date().toISOString());
+console.log('Environment Variables:', {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
-  RENDER: process.env.RENDER
+  RENDER: process.env.RENDER,
+  NODE_VERSION: process.version,
+  PLATFORM: process.platform,
+  ARCH: process.arch
+});
+console.log('Current working directory:', process.cwd());
+console.log('File paths:', {
+  __filename: __filename,
+  __dirname: __dirname
 });
 
 const http = require('http');

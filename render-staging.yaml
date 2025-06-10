@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: practicegenius-api-staging
+    env: node
+    region: oregon
+    plan: free
+    
+    # Build command
+    buildCommand: npm install
+    
+    # Start command
+    startCommand: node server.js
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 10000
+    
+    # Health check settings
+    healthCheckPath: /
+    healthCheckTimeout: 30s
+    healthCheckInterval: 60s
+    healthCheckThreshold: 3
+    
+    # Auto-deploy settings
+    autoDeploy: true
+    branch: main
