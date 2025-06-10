@@ -8,7 +8,8 @@ interface ErrorProps {
   message?: string;
 }
 
-const ErrorPage: React.FC<ErrorProps> = ({ statusCode, message }) => {
+// Using NextPage instead of React.FC to support getInitialProps
+function ErrorPage({ statusCode, message }: ErrorProps) {
   return (
     <MainLayout>
       <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
@@ -38,10 +39,11 @@ const ErrorPage: React.FC<ErrorProps> = ({ statusCode, message }) => {
       </div>
     </MainLayout>
   );
-};
+}
 
-ErrorPage.getInitialProps = ({ res, err }: NextPageContext) => {
-  const statusCode = res ? res.statusCode : err ? err.statusCode : 404;
+// Define getInitialProps as a static method
+ErrorPage.getInitialProps = ({ res, err }: NextPageContext): ErrorProps => {
+  const statusCode = res ? res.statusCode : err ? (err as any).statusCode : 404;
   return { statusCode };
 };
 
