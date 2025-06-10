@@ -3,8 +3,7 @@ services:
     name: practicegenius-api
     env: node
     buildCommand: npm install
-    startCommand: npm run health
-    healthCheckPath: /health
+    startCommand: node health-check.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,7 +19,22 @@ services:
         value: https://practicegeniusv2.netlify.app
       - key: CORS_ORIGIN
         value: https://practicegeniusv2.netlify.app
+    # Health check settings
     healthCheckPath: /health
     healthCheckTimeout: 10s
     healthCheckInterval: 60s
     healthCheckThreshold: 3
+    # Auto-deploy settings
+    autoDeploy: true
+    # Build settings
+    buildCommand: npm install
+    # Environment
+    env: node
+    # Plan
+    plan: free
+    # Region
+    region: oregon
+    # Build environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
