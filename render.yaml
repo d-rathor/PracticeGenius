@@ -18,7 +18,7 @@ services:
       - key: NODE_ENV
         value: 'production'
       - key: CORS_ORIGIN
-        value: 'https://practicegeniusv2.netlify.app,http://localhost:3000'
+        value: 'https://practicegeniusv2.netlify.app,http://localhost:3000,https://practicegenius-api.onrender.com'
       - key: FRONTEND_URL
         value: 'https://practicegeniusv2.netlify.app'
       - key: NODE_TLS_REJECT_UNAUTHORIZED
@@ -27,6 +27,10 @@ services:
         value: 'debug'
       - key: PORT
         value: '10000'
+      - key: CORS_ALLOWED_HEADERS
+        value: 'Content-Type,Authorization'
+      - key: CORS_METHODS
+        value: 'GET,POST,PUT,DELETE,OPTIONS'
     
     # Health check settings
     healthCheckPath: /

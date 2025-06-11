@@ -9,26 +9,36 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
+// Configure CORS with specific options
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // List of allowed origins
+    const allowedOrigins = [
+      'https://practicegeniusv2.netlify.app',
+      'http://localhost:3000',
+      'https://practicegenius-api.onrender.com'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
 // Enable CORS for all routes
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log(`Incoming ${req.method} request to ${req.originalUrl} from origin:`, origin);
-  
-  // Allow all origins
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS preflight request');
-    return res.status(200).end();
-  }
-  
-  next();
-});
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
