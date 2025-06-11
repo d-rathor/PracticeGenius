@@ -22,11 +22,11 @@ router.get('/', (req, res) => {
 });
 
 // Mount routes
-router.use('/api/auth', authRoutes);
-router.use('/api/users', userRoutes);
-router.use('/api/worksheets', worksheetRoutes);
-router.use('/api/subscriptions', subscriptionRoutes);
-router.use('/api/subscription-plans', subscriptionPlanRoutes);
-router.use('/api/settings', settingsRoutes);
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+router.use('/worksheets', worksheetRoutes);
+router.use('/subscriptions', subscriptionRoutes);
+router.use('/subscription-plans', subscriptionPlanRoutes);
+router.use('/settings', settingsRoutes);
 
 module.exports = router;

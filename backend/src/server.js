@@ -97,14 +97,18 @@ app.get('/', (req, res) => {
   });
 });
 
+// Import all routes
+const routes = require('./routes');
+
 // Mount API routes before starting the server
-try {
-  const routes = require('./routes');
-  app.use('/', routes);
-  console.log('All routes mounted successfully');
-} catch (routeError) {
-  console.error('Failed to mount routes:', routeError);
-}
+app.use('/api', routes);
+console.log('All routes mounted successfully');
+
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // Start server first, then try MongoDB connection
 const server = app.listen(PORT, '0.0.0.0', () => {
