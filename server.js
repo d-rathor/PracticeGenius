@@ -1,5 +1,6 @@
 console.log('=== STARTING PRACTICE GENIUS API ===');
-console.log('Timestamp:', new Date().toISOString());
+console.log('Deployment Timestamp:', new Date().toISOString());
+console.log('Version: 1.0.1');
 console.log('Environment Variables:', {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
