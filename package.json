@@ -10,5 +10,8 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "http": "^0.0.1-security"
+  }
 }

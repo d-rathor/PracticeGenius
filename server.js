@@ -36,9 +36,23 @@ server.on('error', (error) => {
 });
 
 // Start the server
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Minimal server running on http://0.0.0.0:${PORT}`);
+const HOST = '0.0.0.0';
+server.listen(PORT, HOST, () => {
+  console.log(`=== SERVER STARTED ===`);
+  console.log(`Server running at http://${HOST}:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Node.js: ${process.version}`);
+  console.log(`Platform: ${process.platform} ${process.arch}`);
   console.log('Press Ctrl+C to stop the server');
+  
+  // Test the server immediately
+  const http = require('http');
+  const test = http.get(`http://localhost:${PORT}`, (res) => {
+    console.log(`Self-test successful: ${res.statusCode}`);
+  });
+  test.on('error', (err) => {
+    console.error('Self-test failed:', err.message);
+  });
 });
 
 // Handle process termination

@@ -1,15 +1,13 @@
 services:
   - type: web
     name: practicegenius-api
-    env: node
+    env: docker
     region: oregon
     plan: free
     
-    # Build command
-    buildCommand: npm install
-    
-    # Start command
-    startCommand: node server.js
+    # Docker settings
+    dockerContext: .
+    dockerfile: Dockerfile
     
     # Environment variables
     envVars:
