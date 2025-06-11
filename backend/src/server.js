@@ -48,10 +48,11 @@ app.use((req, res, next) => {
   console.log(`Incoming ${req.method} request from origin:`, origin);
   
   // Allow all origins for testing
-  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -64,7 +65,11 @@ app.use((req, res, next) => {
 
 // Log all incoming requests for debugging
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`, {
+    headers: req.headers,
+    query: req.query,
+    body: req.body
+  });
   next();
 });
 
