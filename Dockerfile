@@ -1,20 +1,36 @@
 # Use the official Node.js 20 image
+FROM node:20.13.1-slim as builder
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Copy package files
+COPY package*.json ./
+
+
+# Install all dependencies first (including devDependencies)
+RUN npm install
+
+# Copy the rest of the application
+COPY . .
+
+# Build the application (if needed)
+# RUN npm run build
+
+# Production stage
 FROM node:20.13.1-slim
 
 # Create app directory
 WORKDIR /usr/src/app
 
-# Install dependencies first for better caching
-COPY package.json ./
+# Copy package files
+COPY package*.json ./
 
-# Only copy package-lock.json if it exists
-COPY package-lock.json* ./ || true
-
-# Install production dependencies only
+# Install only production dependencies
 RUN npm install --production --no-optional
 
-# Bundle app source
-COPY . .
+# Copy built application from builder
+COPY --from=builder /usr/src/app .
 
 # Expose the port the app runs on
 EXPOSE 10000
