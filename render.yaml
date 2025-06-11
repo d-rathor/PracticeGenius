@@ -15,6 +15,10 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: CORS_ORIGIN
+        value: 'https://practicegeniusv2.netlify.app,http://localhost:3000'
+      - key: FRONTEND_URL
+        value: 'https://practicegeniusv2.netlify.app'
     
     # Health check settings
     healthCheckPath: /

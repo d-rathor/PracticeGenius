@@ -28,16 +28,33 @@ app.get('/', (req, res, next) => {
 });
 
 // Middleware
-// Configure CORS to accept all origins during development
-app.use(cors({
-  origin: true, // Allow all origins in development
+// Configure CORS with allowed origins from environment
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(origin => origin.trim());
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      console.log(`CORS blocked for origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  maxAge: 86400 // 24 hours
+};
+
+// Apply CORS with the configured options
+app.use(cors(corsOptions));
 
 // Handle preflight requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
