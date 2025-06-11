@@ -25,6 +25,8 @@ services:
         value: '0'  # Only for development, remove in production with valid certificates
       - key: LOG_LEVEL
         value: 'debug'
+      - key: CORS_ALLOWED_ORIGINS
+        value: 'https://practicegeniusv2.netlify.app,http://localhost:3000,https://practicegenius-api.onrender.com'
     
     # Health check settings
     healthCheckPath: /

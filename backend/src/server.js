@@ -9,18 +9,38 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
+// List of allowed origins
+const allowedOrigins = [
+  'https://practicegeniusv2.netlify.app',
+  'http://localhost:3000',
+  'https://practicegenius-api.onrender.com'
+];
+
 // Enable CORS for all routes
 app.use((req, res, next) => {
-  // List of allowed origins
-  const allowedOrigins = [
-    'https://practicegeniusv2.netlify.app',
-    'http://localhost:3000',
-    'https://practicegenius-api.onrender.com'
-  ];
-  
   const origin = req.headers.origin;
   
   // Set CORS headers
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
+// Add CORS headers to all responses
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
@@ -28,11 +48,6 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
   
   next();
 });
