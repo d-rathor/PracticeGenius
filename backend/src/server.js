@@ -9,6 +9,27 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
+// Enable CORS for all routes
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log(`Incoming ${req.method} request to ${req.originalUrl} from origin:`, origin);
+  
+  // Allow all origins
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 // Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
   res.status(200).set('Content-Type', 'text/plain').send('OK');
@@ -27,10 +48,6 @@ app.get('/', (req, res, next) => {
   next();
 });
 
-// Middleware
-// Configure CORS with allowed origins from environment
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(origin => origin.trim());
-
 // Log environment variables for debugging
 console.log('Environment Variables:', {
   NODE_ENV: process.env.NODE_ENV,
@@ -39,31 +56,11 @@ console.log('Environment Variables:', {
   PORT: process.env.PORT
 });
 
-// Log allowed origins for debugging
-console.log('Allowed CORS origins:', allowedOrigins);
+// Standard middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// Apply CORS middleware with permissive settings for testing
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log(`Incoming ${req.method} request from origin:`, origin);
-  
-  // Allow all origins for testing
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS preflight request');
-    return res.status(200).end();
-  }
-  
-  next();
-});
-
-// Log all incoming requests for debugging
+// Log all requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`, {
     headers: req.headers,
@@ -72,9 +69,6 @@ app.use((req, res, next) => {
   });
   next();
 });
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
 // Logger
 if (NODE_ENV === 'development') {
