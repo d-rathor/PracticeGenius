@@ -31,44 +31,42 @@ app.get('/', (req, res, next) => {
 // Configure CORS with allowed origins from environment
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(origin => origin.trim());
 
+// Log environment variables for debugging
+console.log('Environment Variables:', {
+  NODE_ENV: process.env.NODE_ENV,
+  CORS_ORIGIN: process.env.CORS_ORIGIN,
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  PORT: process.env.PORT
+});
+
 // Log allowed origins for debugging
 console.log('Allowed CORS origins:', allowedOrigins);
 
-// Configure CORS with the cors package
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin is in the allowed list or matches a pattern
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (allowedOrigin === '*') return true;
-      if (origin === allowedOrigin) return true;
-      // Check if the origin ends with the allowed origin (for subdomains)
-      if (origin.endsWith(allowedOrigin.replace(/^https?:\/\//, ''))) return true;
-      return false;
-    });
-    
-    if (isAllowed) {
-      console.log('CORS allowed for origin:', origin);
-      callback(null, true);
-    } else {
-      console.log('CORS blocked for origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'Content-Range'],
-  maxAge: 86400 // 24 hours
-};
+// Apply CORS middleware with permissive settings for testing
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log(`Incoming ${req.method} request from origin:`, origin);
+  
+  // Allow all origins for testing
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

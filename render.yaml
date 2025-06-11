@@ -21,6 +21,8 @@ services:
         value: 'https://practicegeniusv2.netlify.app'
       - key: NODE_TLS_REJECT_UNAUTHORIZED
         value: '0'  # Only for development, remove in production with valid certificates
+      - key: LOG_LEVEL
+        value: 'debug'
     
     # Health check settings
     healthCheckPath: /
