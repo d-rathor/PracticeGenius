@@ -37,27 +37,9 @@ const WorksheetDetailPage: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // Use mock data directly in development to avoid API call errors
-        if (process.env.NODE_ENV === 'development') {
-          const mockWorksheet = {
-            id: id as string,
-            title: 'Addition and Subtraction',
-            subject: 'Math',
-            grade: 'Grade 2',
-            difficulty: 'Easy',
-            description: 'Practice basic addition and subtraction with numbers 1-20. This worksheet includes 20 problems with increasing difficulty to help students master these fundamental math skills.',
-            content: 'This is the content of the worksheet. In a real application, this would contain the actual worksheet content or a link to a PDF file.',
-            downloadCount: 245,
-            dateCreated: '2025-01-15',
-            imageUrl: '/images/worksheets/math1.jpg'
-          };
-          setWorksheet(mockWorksheet);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Only try the API call if not in development
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/worksheets/${id}`;
+        // Use the environment variable for API URL
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/worksheets/${id}`;
+        console.log('Fetching worksheet from:', apiUrl, 'Environment:', process.env.NODE_ENV);
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
