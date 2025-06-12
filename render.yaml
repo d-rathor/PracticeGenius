@@ -3,40 +3,68 @@ services:
     name: practicegenius-api
     env: docker
     region: oregon
-    plan: free
+    plan: free  # Consider upgrading to a paid plan for production
     
     # Docker settings
     dockerContext: .
     dockerfile: Dockerfile
+    
+    # Build command (if not using Dockerfile)
+    # buildCommand: npm install && npm run build
+    
+    # Start command (if not using Dockerfile)
+    # startCommand: npm start
     
     # Environment variables
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
-      - key: NODE_ENV
-        value: 'production'
-      - key: PORT
         value: '10000'
+      - key: MONGODB_URI
+        sync: false  # Set this in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: JWT_EXPIRE
+        value: '30d'
+      - key: JWT_COOKIE_EXPIRE
+        value: '30'
       - key: FRONTEND_URL
         value: 'https://practicegeniusv2.netlify.app'
-      - key: NODE_TLS_REJECT_UNAUTHORIZED
-        value: '0'  # Only for development, remove in production with valid certificates
+      - key: CORS_ORIGINS
+        value: 'https://practicegeniusv2.netlify.app,http://localhost:3000,https://practicegenius.netlify.app,https://practicegenius-api.onrender.com'
+      - key: CORS_METHODS
+        value: 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+      - key: CORS_ALLOWED_HEADERS
+        value: 'Content-Type,Authorization,X-Requested-With,x-auth-token'
+      - key: CORS_CREDENTIALS
+        value: 'true'
+      - key: CORS_MAX_AGE
+        value: '86400'
       - key: LOG_LEVEL
         value: 'debug'
-      - key: CORS_ORIGIN
-        value: 'https://practicegeniusv2.netlify.app,http://localhost:3000,https://practicegenius-api.onrender.com'
-      - key: CORS_METHODS
-        value: 'GET,POST,PUT,DELETE,OPTIONS'
-      - key: CORS_ALLOWED_HEADERS
-        value: 'Content-Type,Authorization'
     
     # Health check settings
-    healthCheckPath: /
-    healthCheckTimeout: 30s
-    healthCheckInterval: 60s
+    healthCheckPath: /health
+    healthCheckTimeout: 10s
+    healthCheckInterval: 30s
     healthCheckThreshold: 3
     
     # Auto-deploy settings
     autoDeploy: true
+    
+    # Build cache settings
+    buildCache:
+      enabled: true
+    
+    # Environment variables for build (only used during build)
+    envVarsBuild:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: 'false'  # Install devDependencies during build
+    
+    # Environment variables for runtime (only used during runtime)
+    envVarsRuntime:
+      - key: NODE_ENV
+        value: production

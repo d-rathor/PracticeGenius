@@ -11,37 +11,43 @@ const app = express();
 
 // CORS middleware configuration
 const corsMiddleware = (req, res, next) => {
+  // Allow all origins for now - in production, you should restrict this
   const allowedOrigins = [
     'https://practicegeniusv2.netlify.app',
     'http://localhost:3000',
-    'https://practicegenius-api.onrender.com'
+    'https://practicegenius-api.onrender.com',
+    'http://localhost:3001',
+    'https://practicegenius.netlify.app',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'https://practicegeniusv2.netlify.app/'
   ];
   
-  const origin = req.headers.origin;
+  const origin = req.headers.origin || '';
+  const requestOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
   
   // Log incoming request details
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, {
-    origin,
+  console.log('Incoming request:', {
+    timestamp: new Date().toISOString(),
     method: req.method,
+    url: req.originalUrl,
+    origin: origin || 'No origin header',
+    allowedOrigin: requestOrigin,
     headers: req.headers
   });
   
-  // For all responses, set CORS headers directly
-  if (allowedOrigins.includes(origin)) {
-    // For preflight requests
-    if (req.method === 'OPTIONS') {
-      console.log('Handling OPTIONS preflight request');
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Max-Age', '86400');
-      return res.status(204).send();
-    }
-    
-    // For regular requests, set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Set CORS headers for all responses
+  res.header('Access-Control-Allow-Origin', requestOrigin);
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token');
+  res.header('Access-Control-Expose-Headers', 'x-auth-token');
+  
+  // For preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
+    res.header('Access-Control-Max-Age', '86400');
+    return res.status(204).send();
   }
   
   next();
@@ -50,30 +56,74 @@ const corsMiddleware = (req, res, next) => {
 // Apply CORS middleware before any routes
 app.use(corsMiddleware);
 
-// Test CORS endpoint with raw HTTP response
+// Enhanced CORS test endpoint with detailed debugging
 app.get('/test-cors', (req, res) => {
-  console.log('Test CORS endpoint hit');
+  console.log('=== CORS Test Endpoint Hit ===');
   
-  // Set headers individually using raw setHeader
-  res.setHeader('Access-Control-Allow-Origin', 'https://practicegeniusv2.netlify.app');
+  // Log all request headers
+  console.log('Request Headers:', JSON.stringify(req.headers, null, 2));
+  
+  // Get the origin from the request
+  const requestOrigin = req.headers.origin || 'No origin header';
+  
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', requestOrigin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-auth-token');
+  res.setHeader('Access-Control-Expose-Headers', 'x-auth-token');
   res.setHeader('Content-Type', 'application/json');
   
-  // Send raw response
-  res.status(200).send(JSON.stringify({ 
+  // Prepare response data
+  const responseData = {
+    success: true,
     message: 'CORS test successful',
-    headers: {
-      'Access-Control-Allow-Origin': 'https://practicegeniusv2.netlify.app',
-      'Access-Control-Allow-Credentials': 'true'
+    request: {
+      method: req.method,
+      url: req.originalUrl,
+      origin: requestOrigin,
+      headers: req.headers
+    },
+    server: {
+      timestamp: new Date().toISOString(),
+      nodeVersion: process.version,
+      environment: process.env.NODE_ENV || 'development'
+    },
+    cors: {
+      'Access-Control-Allow-Origin': requestOrigin,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, x-auth-token'
     }
-  }));
+  };
   
-  console.log('Response headers set:', {
-    'Access-Control-Allow-Origin': 'https://practicegeniusv2.netlify.app',
-    'Access-Control-Allow-Credentials': 'true'
+  // Log the response we're about to send
+  console.log('Sending CORS test response:', JSON.stringify(responseData, null, 2));
+  
+  // Send the response
+  res.status(200).json(responseData);
+});
+
+// Add OPTIONS handler for preflight requests
+app.options('/test-cors', (req, res) => {
+  console.log('=== CORS Preflight Request ===');
+  console.log('Preflight Headers:', JSON.stringify(req.headers, null, 2));
+  
+  const requestOrigin = req.headers.origin || '*';
+  
+  res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-auth-token');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
+  console.log('Sending preflight response headers:', {
+    'Access-Control-Allow-Origin': requestOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, x-auth-token'
   });
+  
+  res.status(204).send();
 });
 
 // Root health check endpoints - must be before all other middleware
