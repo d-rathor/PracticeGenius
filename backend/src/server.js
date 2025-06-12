@@ -37,7 +37,7 @@ const corsMiddleware = (req, res, next) => {
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS preflight request');
-    return res.status(200).json({});
+    return res.status(204).send();
   }
   
   next();
