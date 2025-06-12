@@ -11,45 +11,44 @@ const app = express();
 
 // CORS middleware configuration
 const corsMiddleware = (req, res, next) => {
-  // Allow all origins for now - in production, you should restrict this
+  // Log all incoming requests for debugging
+  console.log('Incoming request:', {
+    method: req.method,
+    url: req.originalUrl,
+    origin: req.headers.origin || 'No origin header',
+    headers: req.headers
+  });
+
+  // Allow all origins - in production, you should restrict this to specific domains
   const allowedOrigins = [
     'https://practicegeniusv2.netlify.app',
     'http://localhost:3000',
     'https://practicegenius-api.onrender.com',
-    'http://localhost:3001',
     'https://practicegenius.netlify.app',
-    'http://localhost:3002',
-    'http://localhost:3003',
     'https://practicegeniusv2.netlify.app/'
   ];
-  
-  const origin = req.headers.origin || '';
+
+  const origin = req.headers.origin;
   const requestOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-  
-  // Log incoming request details
-  console.log('Incoming request:', {
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    url: req.originalUrl,
-    origin: origin || 'No origin header',
-    allowedOrigin: requestOrigin,
-    headers: req.headers
-  });
-  
-  // Set CORS headers for all responses
-  res.header('Access-Control-Allow-Origin', requestOrigin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token');
-  res.header('Access-Control-Expose-Headers', 'x-auth-token');
-  
-  // For preflight requests
+
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Expose-Headers', 'x-auth-token');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS preflight request');
-    res.header('Access-Control-Max-Age', '86400');
-    return res.status(204).send();
+    console.log('Handling OPTIONS preflight request with headers:', {
+      'Access-Control-Allow-Origin': requestOrigin,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token'
+    });
+    return res.status(204).end();
   }
-  
+
   next();
 };
 
