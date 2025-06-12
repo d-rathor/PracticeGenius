@@ -26,28 +26,25 @@ const corsMiddleware = (req, res, next) => {
     headers: req.headers
   });
   
-  // Set CORS headers for all responses
+  // Always set CORS headers for all responses
   if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Origin', origin);
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS preflight request');
-    return res.status(200).end();
+    return res.status(200).json({});
   }
   
   next();
 };
 
-// Apply CORS middleware to all routes
+// Apply CORS middleware before any routes
 app.use(corsMiddleware);
-
-// Apply CORS middleware again specifically for /api routes
-app.use('/api', corsMiddleware);
 
 // Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
