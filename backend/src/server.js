@@ -9,8 +9,8 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
-// Custom CORS middleware with detailed logging
-app.use((req, res, next) => {
+// CORS middleware configuration
+const corsMiddleware = (req, res, next) => {
   const allowedOrigins = [
     'https://practicegeniusv2.netlify.app',
     'http://localhost:3000',
@@ -22,18 +22,17 @@ app.use((req, res, next) => {
   // Log incoming request details
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, {
     origin,
-    headers: req.headers,
-    method: req.method
+    method: req.method,
+    headers: req.headers
   });
   
-  // Set CORS headers
+  // Set CORS headers for all responses
   if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -42,7 +41,13 @@ app.use((req, res, next) => {
   }
   
   next();
-});
+};
+
+// Apply CORS middleware to all routes
+app.use(corsMiddleware);
+
+// Apply CORS middleware again specifically for /api routes
+app.use('/api', corsMiddleware);
 
 // Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
