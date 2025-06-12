@@ -26,18 +26,22 @@ const corsMiddleware = (req, res, next) => {
     headers: req.headers
   });
   
-  // Always set CORS headers for all responses
+  // For all responses, set CORS headers directly
   if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS preflight request');
-    return res.status(204).send();
+    // For preflight requests
+    if (req.method === 'OPTIONS') {
+      console.log('Handling OPTIONS preflight request');
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(204).send();
+    }
+    
+    // For regular requests, set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   
   next();
@@ -45,6 +49,15 @@ const corsMiddleware = (req, res, next) => {
 
 // Apply CORS middleware before any routes
 app.use(corsMiddleware);
+
+// Test CORS endpoint
+app.get('/test-cors', (req, res) => {
+  res.header('Access-Control-Allow-Origin', 'https://practicegeniusv2.netlify.app');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.json({ message: 'CORS test successful' });
+});
 
 // Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
