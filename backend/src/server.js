@@ -50,13 +50,30 @@ const corsMiddleware = (req, res, next) => {
 // Apply CORS middleware before any routes
 app.use(corsMiddleware);
 
-// Test CORS endpoint
+// Test CORS endpoint with raw HTTP response
 app.get('/test-cors', (req, res) => {
-  res.header('Access-Control-Allow-Origin', 'https://practicegeniusv2.netlify.app');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.json({ message: 'CORS test successful' });
+  console.log('Test CORS endpoint hit');
+  
+  // Set headers individually using raw setHeader
+  res.setHeader('Access-Control-Allow-Origin', 'https://practicegeniusv2.netlify.app');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Content-Type', 'application/json');
+  
+  // Send raw response
+  res.status(200).send(JSON.stringify({ 
+    message: 'CORS test successful',
+    headers: {
+      'Access-Control-Allow-Origin': 'https://practicegeniusv2.netlify.app',
+      'Access-Control-Allow-Credentials': 'true'
+    }
+  }));
+  
+  console.log('Response headers set:', {
+    'Access-Control-Allow-Origin': 'https://practicegeniusv2.netlify.app',
+    'Access-Control-Allow-Credentials': 'true'
+  });
 });
 
 // Root health check endpoints - must be before all other middleware
