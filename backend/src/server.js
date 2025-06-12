@@ -9,24 +9,40 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
-// Enable CORS with specific options
-const corsOptions = {
-  origin: [
+// Custom CORS middleware with detailed logging
+app.use((req, res, next) => {
+  const allowedOrigins = [
     'https://practicegeniusv2.netlify.app',
     'http://localhost:3000',
     'https://practicegenius-api.onrender.com'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-
-// Enable CORS for all routes
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+  ];
+  
+  const origin = req.headers.origin;
+  
+  // Log incoming request details
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, {
+    origin,
+    headers: req.headers,
+    method: req.method
+  });
+  
+  // Set CORS headers
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Root health check endpoints - must be before all other middleware
 app.get('/health', (req, res) => {
