@@ -39,4 +39,4 @@ EXPOSE 10000
 ENV NODE_ENV=production
 
 # Start the server
-CMD ["node", "server.js"]
+CMD ["node", "backend/src/server.js"]
