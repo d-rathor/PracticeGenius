@@ -9,51 +9,43 @@ const { errorHandler, notFound } = require('./middleware/error');
 // Initialize express app
 const app = express();
 
-// CORS middleware configuration
-const corsMiddleware = (req, res, next) => {
-  // Log all incoming requests for debugging
-  console.log('Incoming request:', {
-    method: req.method,
-    url: req.originalUrl,
-    origin: req.headers.origin || 'No origin header',
-    headers: req.headers
-  });
+// CORS Configuration using the 'cors' package
+const allowedOrigins = [
+  'https://practicegeniusv2.netlify.app', // Primary frontend
+  'http://localhost:3000',             // Local frontend development for testing
+  // Add any other specific origins that need access
+];
 
-  // Allow all origins - in production, you should restrict this to specific domains
-  const allowedOrigins = [
-    'https://practicegeniusv2.netlify.app',
-    'http://localhost:3000',
-    'https://practicegenius-api.onrender.com',
-    'https://practicegenius.netlify.app',
-    'https://practicegeniusv2.netlify.app/'
-  ];
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Log the incoming origin for debugging
+    console.log('CORS check: Request origin:', origin);
+    console.log('CORS check: Allowed origins:', allowedOrigins);
 
-  const origin = req.headers.origin;
-  const requestOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', requestOrigin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Expose-Headers', 'x-auth-token');
-  res.setHeader('Access-Control-Max-Age', '86400');
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS preflight request with headers:', {
-      'Access-Control-Allow-Origin': requestOrigin,
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token'
-    });
-    return res.status(204).end();
-  }
-
-  next();
+    // Allow requests with no origin (like mobile apps or curl requests in some cases)
+    // or if the origin is in our allowed list.
+    if (!origin || allowedOrigins.includes(origin)) {
+      console.log('CORS check: Origin allowed.');
+      callback(null, true);
+    } else {
+      console.error('CORS Error: Origin not allowed:', origin);
+      callback(new Error('Not allowed by CORS: Origin ' + origin + ' is not in the allowed list.'));
+    }
+  },
+  credentials: true, // Allows cookies to be sent and received
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-auth-token', 'Origin', 'Accept'],
+  exposedHeaders: ['x-auth-token'],
+  maxAge: 86400, // Cache preflight response for 1 day
+  optionsSuccessStatus: 204 // Return 204 for successful preflight OPTIONS requests for browsers
 };
 
-// Apply CORS middleware before any routes
-app.use(corsMiddleware);
+// Apply CORS middleware globally. The `cors` package handles preflight (OPTIONS) requests automatically.
+app.use(cors(corsOptions));
+
+// Forcing OPTIONS route handling can sometimes be useful for complex setups, but usually not needed with `cors` package.
+// If issues persist, you might uncomment this, but it's generally handled by app.use(cors(corsOptions)).
+// app.options('*', cors(corsOptions)); // Explicitly handle OPTIONS for all routes
 
 // Enhanced CORS test endpoint with detailed debugging
 app.get('/test-cors', (req, res) => {
