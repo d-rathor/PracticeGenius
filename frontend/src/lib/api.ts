@@ -12,13 +12,15 @@ const NODE_ENV_VALUE = process.env.NODE_ENV;
  */
 const apiClient = {
   isDevelopmentCheck: NODE_ENV_VALUE === 'development',
-  API_BASE_URL: 'http://localhost:8080', // Temporarily forced
+  API_BASE_URL: NODE_ENV_VALUE === 'development' 
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') 
+    : '/api/proxy',
   BACKEND_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
 
   logInitialDebug: function() {
     console.log('[api.ts] DEBUG: process.env.NODE_ENV:', NODE_ENV_VALUE);
     console.log('[api.ts] DEBUG: isDevelopmentCheck (NODE_ENV === "development"):', this.isDevelopmentCheck);
-    console.log('[api.ts] DEBUG: Forced API_BASE_URL for this session to:', this.API_BASE_URL);
+    console.log('[api.ts] DEBUG: API_BASE_URL for this session is:', this.API_BASE_URL);
   },
 
   /**
@@ -99,15 +101,9 @@ const apiClient = {
       delete options.params; // Remove params from options before passing to fetch
     }
 
-    // Construct the URL using the (currently forced) API_BASE_URL for this debugging session
+    // Construct the URL
     const url = `${this.API_BASE_URL}${endpointPath}`;
-    console.log(`[api.ts] DEBUG: Making ${options.method || 'GET'} request to (using forced API_BASE_URL): ${url}`);
-
-    // Log what the URL would have been with the original, non-forced logic for context
-    const originalCalculatedBase = this.isDevelopmentCheck 
-      ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') 
-      : '/api/proxy'; // In a non-debug scenario, production might use a relative path for a Next.js proxy
-    console.log(`[api.ts] DEBUG: Original URL (if not forced) would have been: ${originalCalculatedBase}${endpointPath}`);
+    console.log(`[api.ts] DEBUG: Making ${options.method || 'GET'} request to: ${url}`);
     
     let token = '';
     if (typeof window !== 'undefined') {
