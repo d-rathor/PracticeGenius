@@ -1,6 +1,10 @@
 console.log('--- lib/api.ts VERSION_CHECK_ABC789 ---');
 // Custom API client for PracticeGenius
 
+interface ApiRequestOptions extends RequestInit {
+  params?: Record<string, any>;
+}
+
 const NODE_ENV_VALUE = process.env.NODE_ENV;
 
 /**
@@ -20,7 +24,7 @@ const apiClient = {
   /**
    * Make a GET request to the API
    */
-  async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    async get<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'GET',
       ...options,
@@ -30,7 +34,7 @@ const apiClient = {
   /**
    * Make a POST request to the API
    */
-  async post<T>(endpoint: string, data: any, options: RequestInit = {}): Promise<T> {
+    async post<T>(endpoint: string, data: any, options: ApiRequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data,
@@ -41,7 +45,7 @@ const apiClient = {
   /**
    * Make a PUT request to the API
    */
-  async put<T>(endpoint: string, data: any, options: RequestInit = {}): Promise<T> {
+    async put<T>(endpoint: string, data: any, options: ApiRequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data,
@@ -52,7 +56,7 @@ const apiClient = {
   /**
    * Make a PATCH request to the API
    */
-  async patch<T>(endpoint: string, data: any, options: RequestInit = {}): Promise<T> {
+    async patch<T>(endpoint: string, data: any, options: ApiRequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, { // Changed to use this.request for consistency
       method: 'PATCH',
       body: data,
@@ -63,7 +67,7 @@ const apiClient = {
   /**
    * Make a DELETE request to the API
    */
-  async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    async delete<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'DELETE',
       ...options,
@@ -76,9 +80,24 @@ const apiClient = {
    * @param options Fetch options
    * @returns Response data
    */
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  async request<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
     const cleanEndpoint = endpoint.replace(/^\/+|\/+$/g, '');
-    const endpointPath = `/${cleanEndpoint}`;
+    let endpointPath = `/${cleanEndpoint}`;
+
+    // Handle query parameters
+    if (options.params) {
+      const queryParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+      const queryString = queryParams.toString();
+      if (queryString) {
+        endpointPath += `?${queryString}`;
+      }
+      delete options.params; // Remove params from options before passing to fetch
+    }
 
     // Construct the URL using the (currently forced) API_BASE_URL for this debugging session
     const url = `${this.API_BASE_URL}${endpointPath}`;
