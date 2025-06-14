@@ -35,7 +35,7 @@ const WorksheetsPage: React.FC = () => {
         setIsLoading(true);
         console.log('Fetching worksheets using WorksheetService...');
         const response = await WorksheetService.getWorksheets({});
-        const worksheetsData = response.data || response || [];
+        const worksheetsData = response || []; // response is already Worksheet[]
         console.log('Raw API response from WorksheetService:', worksheetsData);
 
         const processedWorksheets = worksheetsData.map((worksheet: any) => ({
