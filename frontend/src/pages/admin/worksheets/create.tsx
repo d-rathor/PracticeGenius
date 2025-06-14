@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 import api from '@/lib/api';
+import WorksheetService from '@/services/worksheet.service';
 import { withAuth } from '@/contexts/AuthContext';
 
 interface SubscriptionPlan {
@@ -24,10 +25,11 @@ interface WorksheetFormData {
   subject: string;
   grade: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  description: string;
-  content: string;
-  pdfFile: File | null;
+  description: string; // This will be used for the main 'Content Details' field
+  // content: string; // Removed as 'description' will serve this purpose
+  worksheetDocument: File | null;
   subscriptionPlanId: string;
+  keywords: string;
 }
 
 const CreateWorksheet: React.FC = () => {
@@ -37,10 +39,11 @@ const CreateWorksheet: React.FC = () => {
     subject: '',
     grade: '',
     difficulty: 'medium',
-    description: '',
-    content: '',
-    pdfFile: null,
-    subscriptionPlanId: ''
+    description: '', // Will hold 'Content Details'
+    // content: '',
+    worksheetDocument: null,
+    subscriptionPlanId: '',
+    keywords: ''
   });
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,18 +55,13 @@ const CreateWorksheet: React.FC = () => {
     const fetchSubscriptionPlans = async () => {
       try {
         setIsLoading(true);
-        // Direct fetch instead of using API client to avoid authentication issues
-        const response = await fetch('/api/admin/subscription-plans');
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch subscription plans: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
+        const data = await api.get('/api/subscriptions/plans');
         console.log('Fetched subscription plans:', data);
         
         // Filter only active plans
-        const activePlans = Array.isArray(data) ? data.filter(plan => plan.isActive) : [];
+        const responseData = data; // Assuming api.get returns the full response object
+        const plansArray = responseData.data && Array.isArray(responseData.data) ? responseData.data : [];
+        const activePlans = plansArray.filter(plan => plan.isActive);
         console.log('Active plans:', activePlans);
         
         setSubscriptionPlans(activePlans);
@@ -91,7 +89,7 @@ const CreateWorksheet: React.FC = () => {
   // Handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, pdfFile: e.target.files![0] }));
+      setFormData(prev => ({ ...prev, worksheetDocument: e.target.files![0] }));
     }
   };
 
@@ -102,23 +100,24 @@ const CreateWorksheet: React.FC = () => {
     console.log('Form data being submitted:', formData);
     
     // Validate form data
-    if (!formData.title || !formData.subject || !formData.grade || !formData.description || !formData.content || !formData.subscriptionPlanId) {
+    // Validate form data (description is now used for Content Details)
+    if (!formData.title || !formData.subject || !formData.grade || !formData.description /* was content */ || !formData.subscriptionPlanId) {
       console.log('Form validation failed. Missing fields:', {
         title: !formData.title,
         subject: !formData.subject,
         grade: !formData.grade,
-        description: !formData.description,
-        content: !formData.content,
+        description: !formData.description, // This is the 'Content Details' field now
         subscriptionPlanId: !formData.subscriptionPlanId
       });
-      setError('Please fill in all required fields, including subscription plan');
+      setError('Please fill in all required fields, including Title, Subject, Grade, Content Details, and Subscription Plan.');
       return;
     }
     
     // Validate file upload
-    if (!formData.pdfFile) {
+    if (!formData.worksheetDocument) {
       console.log('No file selected');
       setError('Please upload a worksheet file');
+      setIsSubmitting(false); // Ensure loading state is reset
       return;
     }
     
@@ -132,82 +131,45 @@ const CreateWorksheet: React.FC = () => {
       data.append('subject', formData.subject);
       data.append('grade', formData.grade);
       data.append('difficulty', formData.difficulty);
-      data.append('description', formData.description);
-      data.append('content', formData.content);
-      data.append('subscriptionPlanId', formData.subscriptionPlanId);
-      if (formData.pdfFile) {
-        // Use 'file' instead of 'pdfFile' to match backend expectations
-        data.append('file', formData.pdfFile);
+      data.append('description', formData.description); // This now correctly sends the 'Content Details'
+      // data.append('content', formData.content); // Removed
+      data.append('keywords', formData.keywords); // Add keywords
+
+      // Map subscriptionPlanId to subscriptionLevel string
+      const selectedPlan = subscriptionPlans.find(plan => plan._id === formData.subscriptionPlanId);
+      if (selectedPlan) {
+        data.append('subscriptionLevel', selectedPlan.name); // 'Free', 'Essential', 'Premium'
+      } else {
+        // Handle case where plan is not found, though form validation should prevent this
+        console.error('Selected subscription plan not found. Cannot determine subscription level.');
+        setError('Invalid subscription plan selected. Please refresh and try again.');
+        setIsSubmitting(false);
+        return;
+      }
+      // data.append('subscriptionPlanId', formData.subscriptionPlanId); // We send subscriptionLevel instead
+
+      if (formData.worksheetDocument) {
+        data.append('worksheetDocument', formData.worksheetDocument); // Ensure correct field name
       }
       
       // Send data to API
-      console.log('Sending form data to API...');
-      let response;
+      console.log('Sending form data via WorksheetService...');
       try {
-        // Get token from localStorage with safety check
-        const token = typeof window !== 'undefined' ? localStorage.getItem('practicegenius_token') : null;
+        // The WorksheetService should use an API client (e.g., Axios)
+        // that automatically includes the Authorization header (JWT token).
+        const createdWorksheet = await WorksheetService.createWorksheet(data);
         
-        if (!token) {
-          console.error('No authentication token found');
-          setError('You must be logged in to create worksheets');
-          setIsSubmitting(false);
-          return;
-        }
-        
-        response = await fetch('/api/admin/worksheets', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: data
-        });
-        
-        console.log('API response status:', response.status);
-        
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.log('Authentication error, redirecting to login');
-            setIsSubmitting(false);
-            router.push('/auth/login?redirect=/admin/worksheets/create');
-            return;
-          }
-          
-          // Try to parse error response
-          let errorMessage = 'Failed to create worksheet';
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
-            console.error('API error response:', errorData);
-          } catch (parseError) {
-            console.error('Could not parse error response:', parseError);
-            // Try to get text instead
-            try {
-              const errorText = await response.text();
-              console.error('API error text:', errorText);
-              errorMessage = errorText || errorMessage;
-            } catch (textError) {
-              console.error('Could not get error text either:', textError);
-            }
-          }
-          throw new Error(errorMessage);
-        }
-        
-        // Successfully created worksheet
-        console.log('Worksheet created successfully');
-        
-        // Show success message
+        console.log('Worksheet created successfully:', createdWorksheet);
         setError(null);
-        setIsSubmitting(false);
-        
-        // Use setTimeout to delay the redirect slightly to ensure state updates complete
-        setTimeout(() => {
-          router.push('/admin/worksheets');
-        }, 100);
-        
-        return; // Exit early after successful submission
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        setError(fetchError instanceof Error ? fetchError.message : 'Failed to create worksheet');
+        // Show success message or redirect
+        // For example, you might want to set a success message in state
+        // and then redirect, or pass a success query param.
+        router.push('/admin/worksheets?created=success'); // Or some other success indication
+
+      } catch (apiError: any) {
+        console.error('API error via WorksheetService:', apiError);
+        setError(apiError.message || 'Failed to create worksheet. Please check details and try again.');
+      } finally {
         setIsSubmitting(false);
       }
       
@@ -381,76 +343,67 @@ const CreateWorksheet: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Description */}
+                {/* Keywords */}
+                <div>
+                  <label htmlFor="keywords" className="block text-sm font-medium text-gray-700">
+                    Keywords (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    name="keywords"
+                    id="keywords"
+                    value={formData.keywords}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    placeholder="e.g., algebra, fractions, grade 5"
+                  />
+                </div>
+
+                {/* Content Details (Now mapped to formData.description and made required by validation logic) */}
                 <div>
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description <span className="text-red-500">*</span>
+                    Content Details <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="description"
-                    name="description"
+                    name="description" // Changed from content
                     rows={3}
-                    required
-                    value={formData.description}
+                    required // Added required attribute
+                    value={formData.description} // Changed from content
                     onChange={handleChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    placeholder="Enter a brief description of the worksheet"
+                    placeholder="Enter detailed content or instructions for the worksheet"
                   />
                 </div>
-                
-                {/* Content */}
+
+                {/* Worksheet File */}
                 <div>
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-                    Worksheet Content <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="content"
-                    name="content"
-                    rows={10}
-                    required
-                    value={formData.content}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm font-mono"
-                    placeholder="Enter the worksheet content or questions"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Format your content with markdown for better presentation. Use ## for headings, * for bullet points, etc.
-                  </p>
-                </div>
-                
-                {/* PDF Upload */}
-                <div>
-                  <label htmlFor="pdfFile" className="block text-sm font-medium text-gray-700">
-                    PDF File (Optional)
+                  <label htmlFor="worksheetDocumentFile" className="block text-sm font-medium text-gray-700">
+                    Worksheet File (PDF, DOC, DOCX) <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-1 flex items-center">
                     <input
-                      id="pdfFile"
-                      name="pdfFile"
+                      id="worksheetDocumentFile" // Changed from pdfFile for clarity
+                      name="worksheetDocument"    // Matches formData state key
                       type="file"
-                      accept=".pdf"
+                      accept=".pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" // Allows PDF and Word
                       onChange={handleFileChange}
                       className="sr-only"
+                      required // HTML5 validation
                     />
                     <label
-                      htmlFor="pdfFile"
+                      htmlFor="worksheetDocumentFile"
                       className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500"
                     >
-                      <span>{formData.pdfFile ? formData.pdfFile.name : 'Upload PDF'}</span>
+                      <span>Choose File</span>
                     </label>
-                    {formData.pdfFile && (
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, pdfFile: null }))}
-                        className="ml-2 text-sm text-red-600 hover:text-red-800"
-                      >
-                        Remove
-                      </button>
+                    {formData.worksheetDocument && (
+                      <span className="ml-3 text-sm text-gray-600">
+                        {formData.worksheetDocument.name}
+                      </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Upload a PDF version of the worksheet for download.
-                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Upload a PDF, DOC, or DOCX version of the worksheet for download.</p>
                 </div>
                 
                 <div className="flex justify-end">

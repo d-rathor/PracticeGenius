@@ -5,6 +5,8 @@ import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import Link from 'next/link';
 import { useAuthContext } from '@/contexts/AuthContext';
+import WorksheetService from '@/services/worksheet.service'; // Import WorksheetService
+import { Button } from '@/components/ui/Button'; // Assuming Button component exists and is styled
 
 interface Worksheet {
   id: string;
@@ -16,7 +18,13 @@ interface Worksheet {
   content: string;
   downloadCount: number;
   dateCreated: string;
-  imageUrl: string;
+  imageUrl?: string; // Optional, as not all worksheets might have a preview image
+  // Add fields related to the downloadable file, assuming backend provides them:
+  fileKey?: string; 
+  fileUrl?: string; // This is the B2 URL, not the pre-signed one for direct download by user
+  originalFilename?: string;
+  mimeType?: string;
+  fileSize?: number;
 }
 
 const WorksheetDetailPage: React.FC = () => {
@@ -27,6 +35,8 @@ const WorksheetDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuthContext();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // Authentication state is now handled by useAuthContext
 
@@ -100,13 +110,46 @@ const WorksheetDetailPage: React.FC = () => {
     });
   };
 
-  const handleDownload = () => {
-    // In a real app, this would check authentication status and then initiate a download
-    console.log('Downloading worksheet:', worksheet?.title);
-    
-    // For now, just show an alert in development mode
-    if (process.env.NODE_ENV === 'development') {
-      alert('Download started!');
+  const handleDownload = async () => {
+    if (!worksheet || !worksheet.id || !worksheet.fileKey) {
+      setDownloadError('Worksheet data is incomplete or no file available for download.');
+      return;
+    }
+
+    setIsDownloading(true);
+    setDownloadError(null);
+    try {
+      const response = await WorksheetService.downloadWorksheet(worksheet.id);
+      if (response && response.downloadUrl) {
+        // Initiate download
+        // Using window.location.href is simpler and usually sufficient
+        window.location.href = response.downloadUrl;
+
+        // // Alternative: Create a temporary link to trigger download with a specific filename
+        // const link = document.createElement('a');
+        // link.href = response.downloadUrl;
+        // // The 'download' attribute suggests a filename to the browser.
+        // // It might not work for cross-origin URLs like pre-signed S3/B2 URLs without specific CORS headers from B2.
+        // // However, B2 pre-signed URLs often include Content-Disposition headers that suggest the filename.
+        // if (worksheet.originalFilename) {
+        //   link.setAttribute('download', worksheet.originalFilename);
+        // }
+        // // link.target = '_blank'; // Optional: to open in a new tab if desired
+        // document.body.appendChild(link);
+        // link.click();
+        // document.body.removeChild(link);
+
+        // Optionally, you could try to update download count on the frontend optimistically
+        // or refetch worksheet data, but this is often handled by backend or analytics.
+
+      } else {
+        throw new Error('Download URL not provided by the server.');
+      }
+    } catch (err: any) {
+      console.error('Download error:', err);
+      setDownloadError(err.response?.data?.message || err.message || 'Failed to initiate download.');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -180,17 +223,22 @@ const WorksheetDetailPage: React.FC = () => {
                       <span>Created {formatDate(worksheet.dateCreated)}</span>
                     </p>
                     
-                    {isAuthenticated ? (
-                      <button 
+                    {/* Conditional rendering for download button */}
+                    {isAuthenticated && worksheet && worksheet.fileKey ? (
+                      <Button 
                         onClick={handleDownload}
+                        disabled={isDownloading}
                         className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center"
                       >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        Download Worksheet
-                      </button>
+                        {isDownloading ? 'Downloading...' : 'Download Worksheet'}
+                      </Button>
+                    ) : isAuthenticated && worksheet && !worksheet.fileKey ? (
+                      <p className="text-sm text-gray-500 text-center py-2">No downloadable file associated with this worksheet.</p>
                     ) : (
+                    
                       <div className="space-y-3 w-full">
                         <Link 
                           href={`/auth/login?redirect=${encodeURIComponent(`/worksheets/${id}`)}`}
@@ -209,6 +257,7 @@ const WorksheetDetailPage: React.FC = () => {
                         </Link>
                       </div>
                     )}
+                    {downloadError && <p className="text-sm text-red-500 mt-2 text-center">Error: {downloadError}</p>}
                   </CardContent>
                 </Card>
               </div>

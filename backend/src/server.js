@@ -19,13 +19,13 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     // Log the incoming origin for debugging
-    console.log('CORS check: Request origin:', origin);
-    console.log('CORS check: Allowed origins:', allowedOrigins);
+    // console.log('CORS check: Request origin:', origin); // Commented out for cleaner logs
+    // console.log('CORS check: Allowed origins:', allowedOrigins); // Commented out for cleaner logs
 
     // Allow requests with no origin (like mobile apps or curl requests in some cases)
     // or if the origin is in our allowed list.
     if (!origin || allowedOrigins.includes(origin)) {
-      console.log('CORS check: Origin allowed.');
+      // console.log('CORS check: Origin allowed.'); // Commented out for cleaner logs
       callback(null, true);
     } else {
       console.error('CORS Error: Origin not allowed:', origin);
@@ -49,10 +49,10 @@ app.use(cors(corsOptions));
 
 // Enhanced CORS test endpoint with detailed debugging
 app.get('/test-cors', (req, res) => {
-  console.log('=== CORS Test Endpoint Hit ===');
+  // console.log('=== CORS Test Endpoint Hit ==='); // Commented out for cleaner logs
   
   // Log all request headers
-  console.log('Request Headers:', JSON.stringify(req.headers, null, 2));
+  // console.log('Request Headers:', JSON.stringify(req.headers, null, 2)); // Commented out for cleaner logs
   
   // Get the origin from the request
   const requestOrigin = req.headers.origin || 'No origin header';
@@ -89,7 +89,7 @@ app.get('/test-cors', (req, res) => {
   };
   
   // Log the response we're about to send
-  console.log('Sending CORS test response:', JSON.stringify(responseData, null, 2));
+  // console.log('Sending CORS test response:', JSON.stringify(responseData, null, 2)); // Commented out for cleaner logs
   
   // Send the response
   res.status(200).json(responseData);
@@ -97,8 +97,8 @@ app.get('/test-cors', (req, res) => {
 
 // Add OPTIONS handler for preflight requests
 app.options('/test-cors', (req, res) => {
-  console.log('=== CORS Preflight Request ===');
-  console.log('Preflight Headers:', JSON.stringify(req.headers, null, 2));
+  // console.log('=== CORS Preflight Request ==='); // Commented out for cleaner logs
+  // console.log('Preflight Headers:', JSON.stringify(req.headers, null, 2)); // Commented out for cleaner logs
   
   const requestOrigin = req.headers.origin || '*';
   
@@ -108,11 +108,11 @@ app.options('/test-cors', (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
   
-  console.log('Sending preflight response headers:', {
-    'Access-Control-Allow-Origin': requestOrigin,
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, x-auth-token'
-  });
+  // console.log('Sending preflight response headers:', { // Commented out for cleaner logs
+  //   'Access-Control-Allow-Origin': requestOrigin,
+  //   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  //   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, x-auth-token'
+  // });
   
   res.status(204).send();
 });

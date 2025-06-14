@@ -86,6 +86,19 @@ exports.getRecentSubscriptions = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Get all available subscription plans
+ * @route   GET /api/subscriptions/plans
+ * @access  Private/Admin
+ */
+exports.getAllSubscriptionPlans = asyncHandler(async (req, res) => {
+  const plans = await SubscriptionPlan.find(); // Fetch all plans
+  res.json({
+    success: true,
+    data: plans,
+  });
+});
+
+/**
  * @desc    Create a new subscription
  * @route   POST /api/subscriptions
  * @access  Private

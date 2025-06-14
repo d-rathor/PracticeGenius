@@ -8,11 +8,11 @@ const path = require('path');
 
 // Import routes
 // These will be created later
-// const authRoutes = require('./src/routes/auth.routes');
-// const userRoutes = require('./src/routes/user.routes');
-// const worksheetRoutes = require('./src/routes/worksheet.routes');
-// const subscriptionRoutes = require('./src/routes/subscription.routes');
-// const settingsRoutes = require('./src/routes/settings.routes');
+const authRoutes = require('./src/routes/auth.routes');
+const userRoutes = require('./src/routes/user.routes');
+const worksheetRoutes = require('./src/routes/worksheet.routes');
+const subscriptionRoutes = require('./src/routes/subscription.routes');
+const settingsRoutes = require('./src/routes/settings.routes');
 
 // Initialize express app
 const app = express();
@@ -39,11 +39,11 @@ app.get('/', (req, res) => {
 });
 
 // API routes will be added here
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/worksheets', worksheetRoutes);
-// app.use('/api/subscriptions', subscriptionRoutes);
-// app.use('/api/settings', settingsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/worksheets', worksheetRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

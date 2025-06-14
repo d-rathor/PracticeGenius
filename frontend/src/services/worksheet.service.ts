@@ -1,4 +1,6 @@
-import api from './api';
+import api from '../lib/api';
+console.log('--- worksheet.service.ts: Imported API module ---', api);
+console.log('--- worksheet.service.ts: API base URL from imported api module ---', api.API_BASE_URL);
 
 export interface Worksheet {
   id: string;
@@ -95,8 +97,9 @@ const WorksheetService = {
    * @returns Download URL
    */
   async downloadWorksheet(id: string) {
-    const response = await api.post(`/api/worksheets/${id}/download`);
-    return response.data;
+    // Corrected to GET request as per backend route definition
+    const response = await api.get(`/api/worksheets/${id}/download`);
+    return response.data; // Expects { downloadUrl: '...' }
   },
   
   /**

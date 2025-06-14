@@ -233,6 +233,51 @@ const WorksheetDetail = () => {
     }
   };
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!id || !worksheet) return;
+
+    setIsDownloading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('practicegenius_token');
+      if (!token) {
+        router.push(`/auth/login?redirect=/admin/worksheets/${id}`);
+        return;
+      }
+      
+      // The backend route for download is a POST request to track downloads
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/worksheets/${id}/download`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to get download link.' }));
+        throw new Error(errorData.message || 'Failed to get download link.');
+      }
+
+      const { data } = await response.json();
+      const downloadUrl = data.downloadUrl;
+
+      if (downloadUrl) {
+        // Open the pre-signed URL in a new tab
+        window.open(downloadUrl, '_blank');
+      } else {
+        throw new Error('Download URL not found in response.');
+      }
+    } catch (err: any) {
+      console.error('Error downloading worksheet:', err);
+      setError(err.message || 'Could not download the file. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="py-6">
@@ -342,18 +387,16 @@ const WorksheetDetail = () => {
                   <div className="border-t border-gray-200 pt-6 mt-6">
                     <h3 className="text-sm font-medium text-gray-500 mb-3">PDF Preview</h3>
                     <div className="flex justify-center bg-gray-50 p-4 rounded-md">
-                      <a 
-                        href={worksheet.pdfUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                      <button 
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300 disabled:cursor-not-allowed"
                       >
                         <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        View PDF
-                      </a>
+                        {isDownloading ? 'Downloading...' : 'Download PDF'}
+                      </button>
                     </div>
                   </div>
                 )}

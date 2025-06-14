@@ -127,6 +127,20 @@ frontend/
 - Download tracking
 - Search and filtering
 
+### Worksheet File Storage and Delivery (Backblaze B2)
+
+Worksheet files (e.g., PDF, DOCX) are not stored on the application server. Instead, they are securely stored and delivered using Backblaze B2, an S3-compatible cloud object storage service.
+
+-   **Storage Provider**: Backblaze B2 was chosen for its cost-effectiveness and S3-compatible API.
+-   **Backend Integration**: The backend uses the official AWS SDK v3 for JavaScript (`@aws-sdk/client-s3`) to interact with the B2 service. The S3 client is configured with the B2 endpoint URL and application key credentials.
+-   **File Uploads**:
+    -   Uploads are handled by `multer` and `multer-s3`, which stream files directly from the client's POST request to the B2 bucket. This avoids saving files temporarily on the server.
+    -   **Compatibility Fix**: A critical fix was implemented to ensure compatibility with B2's API. The `flexibleChecksumsMiddleware`, which adds unsupported `x-amz-checksum-*` headers, is programmatically removed from the S3 client's middleware stack. This prevents upload failures and 500 errors.
+-   **File Downloads**:
+    -   All worksheet files in the B2 bucket are private and cannot be accessed directly via public URLs.
+    -   To enable secure downloads, the backend provides the `/api/worksheets/:id/download` endpoint. When a user requests a download, this endpoint verifies their permissions (e.g., subscription level, admin status) and then generates a short-lived, secure **pre-signed URL** for the requested file.
+    -   The frontend receives this pre-signed URL and initiates the download, providing the user with temporary, secure access to the private file.
+
 ### Settings Management
 
 - Subscription settings (pricing, features)
@@ -302,6 +316,11 @@ MONGODB_URI=mongodb+srv://devendrarathor:AUhkNDOr3164jhct@practicegenius.leeblag
 JWT_SECRET=practicegenius-dev-secret-key
 JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:3000
+B2_BUCKET_NAME=your-b2-bucket-name
+B2_ENDPOINT=s3.us-west-000.backblazeb2.com
+B2_REGION=us-west-000
+B2_ACCESS_KEY_ID=your-b2-key-id
+B2_SECRET_ACCESS_KEY=your-b2-secret-application-key
 ```
 
 > Note: The MongoDB URI uses MongoDB Atlas for cloud database storage. This ensures data persistence across browsers and devices.
@@ -343,6 +362,36 @@ The `netlify.toml` file must be placed in the repository root directory, not in 
 - Next.js 15 requires Node.js ^18.18.0 || ^19.8.0 || >= 20.0.0
 - Some npm packages like minimatch@10.0.1 and path-scurry@2.0.0 require Node.js 20 or higher
 - Set NODE_VERSION to "20.11.1" in netlify.toml for compatibility
+
+## Deployment Learnings & Key Fixes
+
+During the course of development and deployment, particularly when integrating the frontend with the backend API hosted on Render, several critical issues were identified and resolved:
+
+### 1. CORS (Cross-Origin Resource Sharing) Resolution
+
+- **Problem**: The frontend (e.g., `https://practicegeniusv2.netlify.app`) was blocked by CORS policy when attempting to fetch data from the backend API (e.g., `https://practicegenius-api.onrender.com`). The browser error "No 'Access-Control-Allow-Origin' header is present" was common.
+- **Solution Steps**:
+    - **Standard `cors` Package**: Replaced custom CORS middleware in `backend/src/server.js` with the standard `cors` npm package. This provided more robust and predictable behavior.
+    - **Whitelist Configuration**: The `cors` middleware was configured with a specific whitelist of allowed origins (e.g., `['https://practicegeniusv2.netlify.app', 'http://localhost:3000']`) and options for `credentials: true`, and appropriate `methods`, `allowedHeaders`, and `exposedHeaders`.
+    - **Logging**: Added detailed logging within the `cors` configuration's `origin` function to verify the `Origin` header received from requests and confirm whether it was allowed.
+    - **Render Environment Variables**: Commented out platform-level `CORS_*` environment variables in `render.yaml` to prevent them from conflicting with or overriding the application-level CORS configuration in `server.js`.
+
+### 2. Dockerfile and Backend Build Process
+
+- **Problem**: The backend deployment on Render initially failed with "Error: Cannot find module 'express'" (and subsequently other modules). This was because the `Dockerfile` was not correctly structured to build the backend application and install its specific dependencies.
+- **Initial Incorrect Setup**: The `Dockerfile` was using the `package.json` from the project root, which did not contain the backend's dependencies. It then tried to run `backend/src/server.js` without these modules.
+- **Solution - Dockerfile Rewrite**:
+    - The `Dockerfile` was significantly rewritten to focus specifically on the backend application.
+    - **Targeted Dependency Installation**:
+        - Copied `backend/package.json` and `backend/package-lock.json` into a `/usr/src/app/backend/` directory within the Docker image.
+        - Changed `WORKDIR` to `/usr/src/app/backend`.
+        - Ran `npm install --production --no-optional` within this `backend` directory to install dependencies listed in `backend/package.json` into `/usr/src/app/backend/node_modules`.
+    - **Code Copy**: Copied the `backend/src` directory into `/usr/src/app/backend/src` in the image.
+    - **Correct Startup Command**: The `CMD` was updated to `["node", "src/server.js"]`, executed from the `/usr/src/app/backend` working directory.
+- **Outcome**: This ensured that the backend application was built with its own set of dependencies, resolving the module loading errors and allowing the server to start correctly.
+
+These fixes were crucial for establishing stable communication between the deployed frontend and backend services.
+
 
 ## UI Strategy
 

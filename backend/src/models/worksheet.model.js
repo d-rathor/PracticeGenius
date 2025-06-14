@@ -31,9 +31,27 @@ const worksheetSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  fileUrl: {
+  // Fields for Backblaze B2 file storage
+  fileKey: { // Object key in B2, e.g., worksheets/timestamp-filename.pdf
     type: String,
-    required: [true, 'File URL is required']
+    trim: true
+    // Not strictly required here as it's set by upload logic, but good to define
+  },
+  fileUrl: { // Full URL to the file in B2 (often referred to as 'location' by multer-s3)
+    type: String,
+    trim: true,
+    required: [true, 'File URL is required after upload']
+  },
+  originalFilename: {
+    type: String,
+    trim: true
+  },
+  mimeType: { // e.g., application/pdf, image/jpeg
+    type: String,
+    trim: true
+  },
+  fileSize: { // Size in bytes
+    type: Number
   },
   thumbnailUrl: {
     type: String,

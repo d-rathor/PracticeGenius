@@ -8,7 +8,8 @@ const {
   updateSubscription,
   cancelSubscription,
   renewSubscription,
-  getRecentSubscriptions
+  getRecentSubscriptions,
+  getAllSubscriptionPlans // Import the new controller function
 } = require('../controllers/subscription.controller');
 const { auth, authorize } = require('../middleware/auth');
 
@@ -32,6 +33,13 @@ router.get('/current', auth, getCurrentSubscription);
  * @access  Private/Admin
  */
 router.get('/recent', auth, authorize(['admin']), getRecentSubscriptions);
+
+/**
+ * @route   GET /api/subscriptions/plans
+ * @desc    Get all available subscription plans
+ * @access  Private/Admin (or Public if plans are generally viewable - for now, admin only)
+ */
+router.get('/plans', auth, authorize(['admin']), getAllSubscriptionPlans);
 
 /**
  * @route   POST /api/subscriptions

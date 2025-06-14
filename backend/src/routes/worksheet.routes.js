@@ -10,7 +10,8 @@ const {
   getRecentWorksheets
 } = require('../controllers/worksheet.controller');
 const { auth, authorize } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+// const oldLocalUpload = require('../middleware/upload'); // Keep if needed for thumbnails later
+const b2WorksheetUpload = require('../config/fileUpload'); // New B2 uploader
 
 /**
  * @route   GET /api/worksheets
@@ -34,10 +35,7 @@ router.get('/recent', getRecentWorksheets);
 router.post('/', 
   auth, 
   authorize('admin'), 
-  upload.fields([
-    { name: 'file', maxCount: 1 },
-    { name: 'thumbnail', maxCount: 1 }
-  ]),
+  b2WorksheetUpload.single('worksheetDocument'), // Use B2 uploader for the main worksheet file
   createWorksheet
 );
 
@@ -56,10 +54,7 @@ router.get('/:id', getWorksheetById);
 router.put('/:id', 
   auth, 
   authorize('admin'), 
-  upload.fields([
-    { name: 'file', maxCount: 1 },
-    { name: 'thumbnail', maxCount: 1 }
-  ]),
+  b2WorksheetUpload.single('worksheetDocument'), // Use B2 uploader for the main worksheet file
   updateWorksheet
 );
 
