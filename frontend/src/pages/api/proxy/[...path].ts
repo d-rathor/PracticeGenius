@@ -55,27 +55,19 @@ export default async function handler(
   const { path } = req.query;
   const pathString = Array.isArray(path) ? path.join('/') : path || '';
   
-  // Remove any leading slashes and the 'api' prefix if present
-  // The proxy is at /api/proxy, so requests like /api/proxy/worksheets should map to /worksheets on the backend
   let apiPath = pathString.replace(/^\/|\/$/g, ''); 
-  // Example: if pathString is "api/worksheets", apiPath becomes "worksheets"
-  // If pathString is "worksheets", apiPath becomes "worksheets"
-  // This logic seems fine if your frontend calls /api/proxy/worksheets or /api/proxy/api/worksheets
 
-  // Construct the target URL using the determinedTargetUrl
   const targetUrl = `${determinedTargetUrl}/${apiPath}`;
   console.log(`[PROXY REQUEST] Forwarding ${req.method} request to: ${targetUrl}`);
 
   try {
-    // Get the access token if user is authenticated
     const session = await getToken({ req });
     const token = session?.accessToken || '';
 
     const headersToForward: Record<string, string> = {};
     for (const key in req.headers) {
       if (req.headers.hasOwnProperty(key) && key.toLowerCase() !== 'host' && key.toLowerCase() !== 'connection' && key.toLowerCase() !== 'content-length') {
-         // Exclude problematic headers
-        if (req.headers[key]) { // Ensure value is not undefined
+        if (req.headers[key]) { 
           headersToForward[key] = Array.isArray(req.headers[key]) ? (req.headers[key] as string[]).join(', ') : req.headers[key] as string;
         }
       }
@@ -83,54 +75,43 @@ export default async function handler(
     if (token) {
       headersToForward['Authorization'] = `Bearer ${token}`;
     }
-    // Ensure Content-Type is correctly passed, especially for FormData
     if (req.headers['content-type']) {
         headersToForward['Content-Type'] = req.headers['content-type'];
     } else if (req.method !== 'GET' && req.method !== 'HEAD') {
-        // Default for POST/PUT if not specified, though client should set it
         headersToForward['Content-Type'] = 'application/json';
     }
     
-    headersToForward['Accept'] = 'application/json, */*'; // Be more flexible with accept
-    headersToForward['host'] = new URL(determinedTargetUrl).host; // Set host to the target's host
+    headersToForward['Accept'] = 'application/json, */*';
+    // *** THIS IS THE CORRECTED LINE ***
+    headersToForward['host'] = new URL(determinedTargetUrl || FALLBACK_PROD_BACKEND_URL).host; 
 
-    // Forward the request to the backend API
     const response = await fetch(targetUrl, {
       method: req.method,
       headers: headersToForward,
-      // Only include body for non-GET/HEAD requests
-      // For FormData, body should be passed directly, not JSON.stringify
       body: (req.method !== 'GET' && req.method !== 'HEAD') ? 
             (req.headers['content-type']?.includes('multipart/form-data') ? req : JSON.stringify(req.body)) 
             : undefined,
       // @ts-ignore
-      duplex: (req.method !== 'GET' && req.method !== 'HEAD') ? 'half' : undefined, // Required for Node.js 18+ fetch with streams/FormData
+      duplex: (req.method !== 'GET' && req.method !== 'HEAD') ? 'half' : undefined, 
     });
 
-    // Forward the response status
     res.status(response.status);
     
-    // Forward all headers from the backend
     response.headers.forEach((value, key) => {
-      // Skip content-encoding as it can cause issues with Next.js
-      // Also skip transfer-encoding
       if (key.toLowerCase() !== 'content-encoding' && key.toLowerCase() !== 'transfer-encoding') {
         res.setHeader(key, value);
       }
     });
 
-    // Add/Override CORS headers - ensure these are appropriate for your security model
-    res.setHeader('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_FRONTEND_URL || '*'); // Be specific in production
+    res.setHeader('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_FRONTEND_URL || '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    // Handle OPTIONS preflight request
     if (req.method === 'OPTIONS') {
         return res.status(204).end();
     }
 
-    // Handle different response types
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/json')) {
       const data = await response.json();
@@ -139,9 +120,6 @@ export default async function handler(
       const data = await response.text();
       return res.send(data);
     } else {
-      // For binary data like images or PDFs, stream the response
-      // Note: Next.js API routes might have limitations with direct streaming of large files.
-      // Consider if direct download from backend or pre-signed URLs are better for large files.
       if (response.body) {
         const reader = response.body.getReader();
         while (true) {
@@ -151,7 +129,7 @@ export default async function handler(
         }
         return res.end();
       } else {
-        return res.send(''); // Or handle as an error if body is expected
+        return res.send(''); 
       }
     }
   } catch (error: any) {
@@ -169,9 +147,8 @@ export default async function handler(
   }
 }
 
-// Handle preflight requests and bodyParser config
 export const config = {
   api: {
-    bodyParser: false, // Set to false to handle FormData correctly, let fetch handle body parsing/streaming
+    bodyParser: false, 
   },
 };
