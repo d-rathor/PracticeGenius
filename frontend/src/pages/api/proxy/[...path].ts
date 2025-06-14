@@ -4,18 +4,12 @@ import { getToken } from 'next-auth/jwt';
 // --- Start of new code block for determining proxy target ---
 
 const FALLBACK_PROD_BACKEND_URL = 'https://practicegenius-api.onrender.com';
-// Netlify sets NEXT_PUBLIC_API_URL from its environment variables.
-// For local dev, this might be undefined or set in a local .env.development or .env.local
 let determinedTargetUrl = process.env.NEXT_PUBLIC_API_URL; 
 
 console.log(`[PROXY DEBUG] Initial process.env.NEXT_PUBLIC_API_URL: ${process.env.NEXT_PUBLIC_API_URL}`);
 console.log(`[PROXY DEBUG] Initial process.env.NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`[PROXY DEBUG] Initial process.env.VERCEL_ENV (Netlify equivalent is CONTEXT): ${process.env.CONTEXT}`); // Netlify uses CONTEXT (production, deploy-preview, branch-deploy)
+console.log(`[PROXY DEBUG] Initial process.env.VERCEL_ENV (Netlify equivalent is CONTEXT): ${process.env.CONTEXT}`); 
 
-// Netlify's equivalent of VERCEL_ENV is CONTEXT.
-// 'production' is the context for the main live site.
-// 'deploy-preview' for pull request previews.
-// 'branch-deploy' for specific branches.
 const isNetlifyProduction = process.env.CONTEXT === 'production';
 
 if (isNetlifyProduction) {
@@ -26,9 +20,8 @@ if (isNetlifyProduction) {
     console.log(`[PROXY INFO] In Netlify Production (CONTEXT: ${process.env.CONTEXT}), using NEXT_PUBLIC_API_URL: ${determinedTargetUrl}`);
   }
 } else {
-  // For local development or other Netlify contexts (deploy-preview, branch-deploy)
   if (!determinedTargetUrl) {
-    const devDefaultUrl = 'http://localhost:8080'; // Default for local Next.js dev
+    const devDefaultUrl = 'http://localhost:8080'; 
     console.log(`[PROXY INFO] In non-production context (CONTEXT: ${process.env.CONTEXT}, NODE_ENV: ${process.env.NODE_ENV}), NEXT_PUBLIC_API_URL not set. Defaulting to ${devDefaultUrl}`);
     determinedTargetUrl = devDefaultUrl;
   } else {
@@ -36,7 +29,6 @@ if (isNetlifyProduction) {
   }
 }
 
-// Final safety net
 if (!determinedTargetUrl) {
   console.error(`[PROXY CRITICAL] Target URL could not be determined after checks. Defaulting to ${FALLBACK_PROD_BACKEND_URL} as a last resort.`);
   determinedTargetUrl = FALLBACK_PROD_BACKEND_URL;
@@ -51,7 +43,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Extract the path from the query parameters
   const { path } = req.query;
   const pathString = Array.isArray(path) ? path.join('/') : path || '';
   
@@ -82,14 +73,14 @@ export default async function handler(
     }
     
     headersToForward['Accept'] = 'application/json, */*';
-    // *** THIS IS THE CORRECTED LINE ***
     headersToForward['host'] = new URL(determinedTargetUrl || FALLBACK_PROD_BACKEND_URL).host; 
 
     const response = await fetch(targetUrl, {
       method: req.method,
       headers: headersToForward,
-      body: (req.method !== 'GET' && req.method !== 'HEAD') ? 
-            (req.headers['content-type']?.includes('multipart/form-data') ? req : JSON.stringify(req.body)) 
+      // *** THIS IS THE CORRECTED PART FOR THE BODY ***
+      body: (req.method !== 'GET' && req.method !== 'HEAD') ?
+            (req.headers['content-type']?.includes('multipart/form-data') ? (req as unknown as ReadableStream<Uint8Array>) : JSON.stringify(req.body))
             : undefined,
       // @ts-ignore
       duplex: (req.method !== 'GET' && req.method !== 'HEAD') ? 'half' : undefined, 
