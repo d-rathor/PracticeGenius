@@ -58,7 +58,7 @@ const WorksheetService = {
    */
   async getWorksheetById(id: string) {
     const response = await api.get<Worksheet>(`/api/worksheets/${id}`);
-    return response.data;
+    return response;
   },
   
   /**
