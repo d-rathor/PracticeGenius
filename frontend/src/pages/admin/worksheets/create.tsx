@@ -59,7 +59,7 @@ const CreateWorksheet: React.FC = () => {
         console.log('Fetched subscription plans:', data);
         
         // Filter only active plans
-        const responseData = data; // Assuming api.get returns the full response object
+        const responseData = data as { data: SubscriptionPlan[] };
         const plansArray = responseData.data && Array.isArray(responseData.data) ? responseData.data : [];
         const activePlans = plansArray.filter(plan => plan.isActive);
         console.log('Active plans:', activePlans);
