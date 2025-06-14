@@ -72,7 +72,7 @@ const WorksheetService = {
         'Content-Type': 'multipart/form-data'
       }
     });
-    return response.data;
+    return response;
   },
   
   /**
@@ -87,7 +87,7 @@ const WorksheetService = {
         'Content-Type': 'multipart/form-data'
       }
     });
-    return response.data;
+    return response;
   },
   
   /**
@@ -97,7 +97,7 @@ const WorksheetService = {
    */
   async deleteWorksheet(id: string) {
     const response = await api.delete<{ message: string }>(`/api/worksheets/${id}`);
-    return response.data;
+    return response;
   },
   
   /**
@@ -108,7 +108,7 @@ const WorksheetService = {
   async downloadWorksheet(id: string) {
     // Corrected to GET request as per backend route definition
     const response = await api.get<{ downloadUrl: string }>(`/api/worksheets/${id}/download`);
-    return response.data; // Expects { downloadUrl: '...' }
+    return response; // Expects { downloadUrl: '...' }
   },
   
   /**
@@ -118,7 +118,7 @@ const WorksheetService = {
    */
   async getRecentWorksheets(limit: number = 5) {
     const response = await api.get<Worksheet[]>('/api/worksheets/recent', { params: { limit } });
-    return response.data;
+    return response;
   }
 };
 
