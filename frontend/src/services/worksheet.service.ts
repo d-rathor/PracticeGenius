@@ -18,6 +18,15 @@ export interface Worksheet {
   updatedAt: string;
 }
 
+// Define the structure of the API response when fetching multiple worksheets
+export interface WorksheetsApiResponse {
+  data: Worksheet[];
+  // Add other pagination fields if your API returns them, e.g.:
+  // currentPage?: number;
+  // totalPages?: number;
+  // totalCount?: number;
+}
+
 export interface WorksheetFilters {
   subject?: string;
   grade?: string;
@@ -38,7 +47,7 @@ const WorksheetService = {
    * @returns Array of worksheets and pagination data
    */
   async getWorksheets(filters: WorksheetFilters = {}) {
-    const response = await api.get('/api/worksheets', { params: filters });
+    const response = await api.get<WorksheetsApiResponse>('/api/worksheets', { params: filters });
     return response.data;
   },
   
@@ -48,7 +57,7 @@ const WorksheetService = {
    * @returns Worksheet data
    */
   async getWorksheetById(id: string) {
-    const response = await api.get(`/api/worksheets/${id}`);
+    const response = await api.get<Worksheet>(`/api/worksheets/${id}`);
     return response.data;
   },
   
@@ -58,7 +67,7 @@ const WorksheetService = {
    * @returns Created worksheet
    */
   async createWorksheet(worksheetData: FormData) {
-    const response = await api.post('/api/worksheets', worksheetData, {
+    const response = await api.post<Worksheet>('/api/worksheets', worksheetData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -73,7 +82,7 @@ const WorksheetService = {
    * @returns Updated worksheet
    */
   async updateWorksheet(id: string, worksheetData: FormData) {
-    const response = await api.put(`/api/worksheets/${id}`, worksheetData, {
+    const response = await api.put<Worksheet>(`/api/worksheets/${id}`, worksheetData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -87,7 +96,7 @@ const WorksheetService = {
    * @returns Success message
    */
   async deleteWorksheet(id: string) {
-    const response = await api.delete(`/api/worksheets/${id}`);
+    const response = await api.delete<{ message: string }>(`/api/worksheets/${id}`);
     return response.data;
   },
   
@@ -98,7 +107,7 @@ const WorksheetService = {
    */
   async downloadWorksheet(id: string) {
     // Corrected to GET request as per backend route definition
-    const response = await api.get(`/api/worksheets/${id}/download`);
+    const response = await api.get<{ downloadUrl: string }>(`/api/worksheets/${id}/download`);
     return response.data; // Expects { downloadUrl: '...' }
   },
   
@@ -108,7 +117,7 @@ const WorksheetService = {
    * @returns Array of recent worksheets
    */
   async getRecentWorksheets(limit: number = 5) {
-    const response = await api.get('/api/worksheets/recent', { params: { limit } });
+    const response = await api.get<Worksheet[]>('/api/worksheets/recent', { params: { limit } });
     return response.data;
   }
 };
