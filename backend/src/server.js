@@ -34,7 +34,7 @@ const corsOptions = {
   },
   credentials: true, // Allows cookies to be sent and received
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-auth-token', 'Origin', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-auth-token', 'Origin', 'Accept', 'X-Forwarded-For'],
   exposedHeaders: ['x-auth-token'],
   maxAge: 86400, // Cache preflight response for 1 day
   optionsSuccessStatus: 204 // Return 204 for successful preflight OPTIONS requests for browsers
