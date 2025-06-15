@@ -20,7 +20,7 @@ const AdminUsersPage: React.FC = () => {
         // UserService now handles the API call and token management
         const response = await UserService.getUsers();
         // The backend returns users in data.data format, which is handled by the service
-        const usersData = response || [];
+        const usersData = Array.isArray(response) ? response : [];
         setUsers(usersData);
         setFilteredUsers(usersData);
       } catch (error) {
