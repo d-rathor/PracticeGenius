@@ -1,25 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import UserService from '@/services/user.service';
+import UserService, { User } from '@/services/user.service';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { withAuth } from '@/contexts/AuthContext';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  subscriptionPlan: string | null;
-  registeredDate: string;
-  lastLoginDate: string;
-}
-
 const AdminUsersPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>([]); // Uses imported User type
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]); // Uses imported User type
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -208,18 +197,18 @@ const AdminUsersPage: React.FC = () => {
                             </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge className={getStatusColor(user.status)}>
-                              {user.status ? (user.status.charAt(0).toUpperCase() + user.status.slice(1)) : 'Unknown'}
+                            <Badge>
+                              N/A
                             </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.subscriptionPlan || 'None'}
+                            {user.activeSubscription || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(user.registeredDate)}
+                            {formatDate(user.createdAt)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(user.lastLoginDate)}
+                            'N/A'
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button className="text-orange-500 hover:text-orange-600 mr-3">
