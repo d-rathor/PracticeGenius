@@ -392,6 +392,25 @@ During the course of development and deployment, particularly when integrating t
 
 These fixes were crucial for establishing stable communication between the deployed frontend and backend services.
 
+## Recent Development Log & Key Fixes (June 15, 2025)
+
+Today's session focused on resolving critical production issues related to worksheet creation and ensuring a clean, stable codebase:
+
+1.  **Resolved Backblaze B2 Upload Failures ("Malformed Access Key Id" / "Resolved credential object is not valid"):**
+    *   **Root Cause**: Incorrect Backblaze B2 environment variable names (`B2_ACCESS_KEY_ID` instead of `B2_KEY_ID`) and a missing `B2_APPLICATION_KEY` in the Render production environment for the backend service.
+    *   **Solution**:
+        *   Updated the Render backend environment variables to use the correct key names: `B2_KEY_ID` and `B2_APPLICATION_KEY`.
+        *   Ensured all B2 credentials (`B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET_NAME`, `B2_ENDPOINT`, `B2_REGION`) in Render matched the verified values from the local backend `.env` file.
+    *   **Outcome**: Worksheet creation and file uploads to Backblaze B2 are now fully functional in the production environment. Downloads were also confirmed to be working.
+
+2.  **Codebase Cleanup:**
+    *   **Removed Debug Logs**: Eliminated temporary `console.log` statements (e.g., `VERSION_CHECK_ABC789`) from frontend files (`src/lib/api.ts`, `src/services/worksheet.service.ts`) that were used during troubleshooting.
+    *   **Removed Obsolete API Proxy**:
+        *   Deleted the `frontend/src/pages/api/proxy_temp_disabled` folder, which contained the now-unused Next.js API proxy route.
+        *   Removed the corresponding `[[redirects]]` rule for `/api/proxy/*` from `frontend/netlify.toml` as the frontend now makes direct calls to the backend API.
+
+These changes have significantly improved the stability and reliability of the worksheet management feature in production and streamlined the codebase.
+
 
 ## UI Strategy
 
