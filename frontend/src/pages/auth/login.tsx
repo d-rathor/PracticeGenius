@@ -5,6 +5,12 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import apiClient from '@/lib/api'; // Import apiClient
 
+interface LoginResponse {
+  token: string;
+  // Add other properties from the login response if needed, e.g., user details
+  // user?: { id: string; name: string; email: string; role: string };
+}
+
 const LoginPage: React.FC = () => {
   const router = useRouter();
   const { redirect } = router.query;
@@ -29,13 +35,13 @@ const LoginPage: React.FC = () => {
       
       // Use apiClient for the login request
       console.log(`Sending login request to: ${apiClient.API_BASE_URL}/api/auth/login`);
-      const data = await apiClient.post('/api/auth/login', { email, password });
+      const data = await apiClient.post<LoginResponse>('/api/auth/login', { email, password });
       // apiClient.post already returns the JSON data and handles response status checking internally
       // If an error occurs (non-2xx response), apiClient.post will throw an error which is caught below.
       console.log('Login response data:', data);
       
       // Store token in localStorage
-      console.log('About to store token:', data.token ? 'Token exists' : 'No token in response');
+      console.log('About to store token:', data && data.token ? 'Token exists' : 'No token in response');
       localStorage.setItem('practicegenius_token', data.token);
       console.log('Token stored in localStorage');
       
