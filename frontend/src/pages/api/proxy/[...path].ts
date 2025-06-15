@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Readable } from 'node:stream'; // Import Node.js Readable
-import type { ReadableStream as WebReadableStream } from 'node:stream/web';
+import type { ReadableStream as WebReadableStreamType } from 'node:stream/web'; // Renamed for clarity
 import { WritableStream as WebWritableStream } from 'node:stream/web';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -39,8 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let bodyToSend: BodyInit | null | undefined = undefined;
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       if (req.headers['content-type']?.includes('multipart/form-data')) {
-        // Convert Node.js IncomingMessage (req) to a Web ReadableStream
-        bodyToSend = Readable.toWeb(req as Readable) as WebReadableStream<Uint8Array>;
+        // Explicitly type req as a Node.js Readable stream for toWeb()
+        const nodeReadableStream = req as Readable; 
+        const webReadableStream = Readable.toWeb(nodeReadableStream);
+        bodyToSend = webReadableStream as WebReadableStreamType<Uint8Array>; // Cast to the aliased type
       } else if (req.body) {
         bodyToSend = JSON.stringify(req.body);
         headersToForward['content-length'] = Buffer.byteLength(bodyToSend).toString();
@@ -54,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: req.method,
       headers: headersToForward,
       body: bodyToSend,
-      // @ts-ignore
+      // @ts-ignore // Keep ts-ignore for duplex if it's problematic, or refine its type
       duplex: (req.method !== 'GET' && req.method !== 'HEAD' && bodyToSend && typeof bodyToSend !== 'string' && !(bodyToSend instanceof URLSearchParams) && !(bodyToSend instanceof FormData) && !(bodyToSend instanceof Blob) && !(bodyToSend instanceof ArrayBuffer) && !(ArrayBuffer.isView(bodyToSend)) ) ? 'half' : undefined,
     });
 
