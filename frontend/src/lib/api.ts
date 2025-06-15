@@ -14,7 +14,7 @@ const apiClient = {
   isDevelopmentCheck: NODE_ENV_VALUE === 'development',
   API_BASE_URL: NODE_ENV_VALUE === 'development' 
     ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') 
-    : '/api/proxy',
+    : (process.env.NEXT_PUBLIC_API_URL || 'https://practicegenius-api.onrender.com'), // Fallback for safety, but should be set in Netlify
   BACKEND_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
 
   logInitialDebug: function() {
