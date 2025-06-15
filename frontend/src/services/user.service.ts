@@ -37,11 +37,12 @@ const UserService = {
     console.log('[UserService.getUsers] Using apiClient with API_BASE_URL:', apiClient.API_BASE_URL);
     console.log('[UserService.getUsers] apiClient object reference check:', typeof apiClient.get === 'function' ? 'apiClient.get is a function' : 'apiClient.get is NOT a function or apiClient is unexpected');
     try {
-      const response = await apiClient.get<User[]>('/api/users', {
+      const response = await apiClient.get<{ data: User[] }>('/api/users', {
         params: { page, limit }
       });
       console.log('[UserService.getUsers] Successfully fetched users (response status will be in network tab):', response ? 'Response received' : 'No response object');
-      return response;
+      // The API returns a paginated object, and the users are in the 'data' property.
+      return response.data || [];
     } catch (error) {
       console.error('[UserService.getUsers] Error fetching users in UserService:', error);
       throw error;
