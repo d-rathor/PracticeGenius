@@ -1,4 +1,4 @@
-import api from './api';
+import apiClient from '@/lib/api';
 
 export interface User {
   id: string;
@@ -34,10 +34,10 @@ const UserService = {
    */
   async getUsers(page: number = 1, limit: number = 10) {
     console.log('[UserService.getUsers] Attempting to fetch users.');
-    console.log('[UserService.getUsers] Using apiClient with API_BASE_URL:', api.API_BASE_URL);
-    console.log('[UserService.getUsers] apiClient object reference check:', typeof api.get === 'function' ? 'api.get is a function' : 'api.get is NOT a function or api is unexpected');
+    console.log('[UserService.getUsers] Using apiClient with API_BASE_URL:', apiClient.API_BASE_URL);
+    console.log('[UserService.getUsers] apiClient object reference check:', typeof apiClient.get === 'function' ? 'apiClient.get is a function' : 'apiClient.get is NOT a function or apiClient is unexpected');
     try {
-      const response = await api.get('/api/users', {
+      const response = await apiClient.get('/api/users', {
         params: { page, limit }
       });
       console.log('[UserService.getUsers] Successfully fetched users (response status will be in network tab):', response ? 'Response received' : 'No response object');
