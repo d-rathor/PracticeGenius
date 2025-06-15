@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AuthService from '@/services/auth.service';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import MainLayout from '@/components/layout/MainLayout';
@@ -109,29 +110,20 @@ const SignupPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      // Use direct API call for registration
-      const apiUrl = 'http://localhost:8080/api/auth/register';
-      console.log('API URL:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name, // Send name field as name
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
-        }),
-        credentials: 'include'
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed. Please try again.');
-      }
+      const registrationData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      };
+
+      // Use AuthService for registration
+      const data = await AuthService.register(registrationData);
+
+      // AuthService.register should throw an error if the request fails,
+      // so we don't need to check response.ok here.
+      // If it returns a specific error structure, that would be handled by AuthService or apiClient.
+
       
       // If email verification is required
       if (data.requiresVerification) {
