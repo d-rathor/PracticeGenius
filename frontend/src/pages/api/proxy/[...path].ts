@@ -1,111 +1,34 @@
+// frontend/src/pages/api/proxy/[...path].ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Readable } from 'node:stream';
-import { WritableStream as WebWritableStream } from 'node:stream/web';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Log the environment variables to understand the context
-  console.log(`[PROXY /api/proxy/[...path].ts] Runtime NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`[PROXY /api/proxy/[...path].ts] Runtime NETLIFY_CONTEXT: ${process.env.NETLIFY_CONTEXT}`); // Netlify-specific context
+  // --- Start of function ---
+  console.log(`--- [PROXY /api/proxy/[...path].ts] FUNCTION EXECUTION STARTED ---`);
+  console.log(`[PROXY] Request URL: ${req.url}`);
+  console.log(`[PROXY] Request Method: ${req.method}`);
+  console.log(`[PROXY] Request Query: ${JSON.stringify(req.query)}`);
+  console.log(`[PROXY] Runtime NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`[PROXY] Runtime NETLIFY_CONTEXT: ${process.env.NETLIFY_CONTEXT}`);
+  console.log(`[PROXY] Runtime NEXT_PUBLIC_API_URL (from function env): ${process.env.NEXT_PUBLIC_API_URL}`);
+  // --- End of diagnostic logs ---
 
-  if (process.env.NODE_ENV === 'production' || process.env.NETLIFY_CONTEXT === 'production') {
-    console.log('[PROXY /api/proxy/[...path].ts] This route is disabled in production environment. Netlify redirects should handle proxying.');
-    res.status(404).json({ message: 'API proxy not available through this route in production. Check Netlify redirects.' });
-    return;
-  }
-
-  // If we reach here in a supposed "production" deployment, something is wrong with env var detection or redirects.
-  console.warn('[PROXY /api/proxy/[...path].ts] WARNING: Executing local dev proxy logic in what might be a production environment. Check NODE_ENV and Netlify redirects.');
-
-  const { path } = req.query;
-  const targetPath = Array.isArray(path) ? path.join('/') : path;
-  const backendApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-  if (!targetPath) {
-    console.error('[PROXY /api/proxy/[...path].ts] Target path is required but was not provided.');
-    return res.status(400).json({ error: 'Target path is required' });
-  }
-
-  const cleanBackendApiUrl = backendApiUrl.endsWith('/') ? backendApiUrl.slice(0, -1) : backendApiUrl;
-  const cleanTargetPath = targetPath.startsWith('/') ? targetPath.slice(1) : targetPath;
-  const targetUrl = `${cleanBackendApiUrl}/${cleanTargetPath}`;
-  console.log(`[PROXY /api/proxy/[...path].ts] LOCAL DEV LOGIC: Forwarding to: ${targetUrl}`);
-
-  try {
-    const headersToForward: Record<string, string> = {};
-    for (const [key, value] of Object.entries(req.headers)) {
-        if (value !== undefined) {
-            headersToForward[key] = Array.isArray(value) ? value.join(', ') : value;
-        }
+  res.status(418).json({ 
+    message: "I'm a teapot. This Next.js proxy function at pages/api/proxy/[...path].ts was executed.",
+    note: "This indicates the Netlify redirect for /api/proxy/* is NOT working as expected or is being bypassed.",
+    requestUrl: req.url,
+    query: req.query,
+    diagnostics: {
+      nodeEnv: process.env.NODE_ENV,
+      netlifyContext: process.env.NETLIFY_CONTEXT,
+      nextPublicApiUrlInFunctionScope: process.env.NEXT_PUBLIC_API_URL
     }
-
-    delete headersToForward.host;
-    delete headersToForward.connection;
-    delete headersToForward.cookie;
-
-    let bodyToSend: BodyInit | null | undefined = undefined;
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      if (req.headers['content-type']?.includes('multipart/form-data')) {
-        const nodeReadableStream = req as Readable;
-        // @ts-ignore - Bypassing persistent type error for local dev path in Netlify build
-        bodyToSend = Readable.toWeb(nodeReadableStream); 
-      } else if (req.body) {
-        bodyToSend = JSON.stringify(req.body);
-        headersToForward['content-length'] = Buffer.byteLength(bodyToSend).toString();
-        if (!headersToForward['content-type']) {
-            headersToForward['content-type'] = 'application/json';
-        }
-      }
-    }
-    
-    const proxyResponse = await fetch(targetUrl, {
-      method: req.method,
-      headers: headersToForward,
-      body: bodyToSend,
-      // @ts-ignore 
-      duplex: (req.method !== 'GET' && req.method !== 'HEAD' && bodyToSend && typeof bodyToSend !== 'string' && !(bodyToSend instanceof URLSearchParams) && !(bodyToSend instanceof FormData) && !(bodyToSend instanceof Blob) && !(bodyToSend instanceof ArrayBuffer) && !(ArrayBuffer.isView(bodyToSend)) ) ? 'half' : undefined,
-    });
-
-    res.status(proxyResponse.status);
-    proxyResponse.headers.forEach((value, name) => {
-      if (!['transfer-encoding', 'content-encoding', 'connection'].includes(name.toLowerCase())) {
-        res.setHeader(name, value);
-      }
-    });
-    
-    if (proxyResponse.body) {
-      // @ts-ignore 
-      await proxyResponse.body.pipeTo(new WebWritableStream({
-        write(chunk) {
-          res.write(chunk);
-        },
-        close() {
-          res.end();
-        },
-        abort(err) {
-          console.error('[PROXY /api/proxy/[...path].ts] LOCAL DEV LOGIC: Stream aborted:', err);
-          if (!res.writableEnded) {
-            res.status(500).end('Proxy stream error');
-          }
-        },
-      }));
-    } else {
-      res.end();
-    }
-
-  } catch (error: any) {
-    console.error(`[PROXY /api/proxy/[...path].ts] LOCAL DEV LOGIC: Error proxying to ${targetUrl}:`, error);
-    if (!res.writableEnded) {
-        if (error.code === 'ECONNREFUSED') {
-            res.status(502).json({ error: 'Bad Gateway: Could not connect to the backend service.' , details: `Connection refused at ${targetUrl}`});
-        } else {
-            res.status(500).json({ error: 'Internal Server Error during proxying', details: error.message });
-        }
-    }
-  }
+  });
+  
+  console.log(`--- [PROXY /api/proxy/[...path].ts] FUNCTION EXECUTION COMPLETED ---`);
 }
 
 export const config = {
   api: {
-    bodyParser: false,
+    // bodyParser: false, // Temporarily remove to simplify; add back if streams are definitely needed by this dummy version
   },
 };
