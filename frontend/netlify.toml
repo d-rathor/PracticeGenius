@@ -1,14 +1,4 @@
-[build]
-  base = "." # Ensures Netlify uses the 'frontend' directory as the project root
-  command = "npm run build"
-  publish = ".next"
 
-[build.environment]
-  NODE_VERSION = "20.11.1"
-  NPM_FLAGS = "--legacy-peer-deps"
-  # This NEXT_PUBLIC_API_URL is for build time if needed by Next.js pages
-  # The runtime proxy will use the Netlify redirect rule below for /api/proxy/*
-  NEXT_PUBLIC_API_URL = "https://practicegenius-api.onrender.com" 
 
 # Next.js specific settings
 [[plugins]]
