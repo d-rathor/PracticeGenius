@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import apiClient from '@/lib/api'; // Import apiClient
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -26,42 +27,12 @@ const LoginPage: React.FC = () => {
     try {
       console.log('Attempting login with:', { email });
       
-      // Make API call to login endpoint with full URL
-      const apiUrl = 'http://localhost:8080/api/auth/login';
-      console.log('Sending request to:', apiUrl);
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
-      
-      console.log('Login response status:', response.status);
-      // Log headers as an object instead of using entries() iterator
-      const headers: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
-      console.log('Login response headers:', headers);
-      
-      const data = await response.json();
+      // Use apiClient for the login request
+      console.log(`Sending login request to: ${apiClient.API_BASE_URL}/api/auth/login`);
+      const data = await apiClient.post('/api/auth/login', { email, password });
+      // apiClient.post already returns the JSON data and handles response status checking internally
+      // If an error occurs (non-2xx response), apiClient.post will throw an error which is caught below.
       console.log('Login response data:', data);
-      
-      if (!response.ok) {
-        // Handle different error status codes with appropriate messages
-        if (response.status === 401) {
-          setError('Invalid email or password. Please try again.');
-        } else if (response.status === 404) {
-          setError('Account not found. Please check your email address.');
-        } else if (response.status === 429) {
-          setError('Too many login attempts. Please try again later.');
-        } else {
-          setError(data.message || 'Login failed. Please try again.');
-        }
-        return; // Stop execution here
-      }
       
       // Store token in localStorage
       console.log('About to store token:', data.token ? 'Token exists' : 'No token in response');
