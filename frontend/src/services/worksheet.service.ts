@@ -1,6 +1,5 @@
 import api from '../lib/api';
-console.log('--- worksheet.service.ts: Imported API module ---', api);
-console.log('--- worksheet.service.ts: API base URL from imported api module ---', api.API_BASE_URL);
+
 
 export interface Worksheet {
   id: string;

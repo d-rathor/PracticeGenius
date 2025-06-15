@@ -1,4 +1,3 @@
-console.log('--- lib/api.ts VERSION_CHECK_ABC789 ---');
 // Custom API client for PracticeGenius
 
 interface ApiRequestOptions extends RequestInit {
