@@ -49,9 +49,9 @@ const AdminUsersPage: React.FC = () => {
       );
     }
     
-    if (statusFilter) {
-      filtered = filtered.filter(user => user.status === statusFilter);
-    }
+    // if (statusFilter) {
+    //   filtered = filtered.filter(user => user.status === statusFilter);
+    // }
     
     setFilteredUsers(filtered);
   }, [searchQuery, statusFilter, users]);
