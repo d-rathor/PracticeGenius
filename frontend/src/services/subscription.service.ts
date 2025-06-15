@@ -1,4 +1,4 @@
-import api from './api';
+import apiClient from '@/lib/api';
 
 export interface SubscriptionPlan {
   id: string;
@@ -47,8 +47,7 @@ const SubscriptionService = {
    * @returns Array of subscription plans
    */
   async getSubscriptionPlans() {
-    const response = await api.get('/api/subscription-plans');
-    return response.data;
+    return apiClient.get<SubscriptionPlan[]>('/api/subscription-plans');
   },
   
   /**
@@ -57,8 +56,7 @@ const SubscriptionService = {
    * @returns Subscription plan data
    */
   async getSubscriptionPlanById(id: string) {
-    const response = await api.get(`/api/subscription-plans/${id}`);
-    return response.data;
+    return apiClient.get<SubscriptionPlan>(`/api/subscription-plans/${id}`);
   },
   
   /**
@@ -66,8 +64,7 @@ const SubscriptionService = {
    * @returns User's active subscription or null
    */
   async getCurrentSubscription() {
-    const response = await api.get('/api/subscriptions/current');
-    return response.data;
+    return apiClient.get<Subscription | null>('/api/subscriptions/current');
   },
   
   /**
@@ -76,8 +73,7 @@ const SubscriptionService = {
    * @returns Created subscription
    */
   async createSubscription(subscriptionData: CreateSubscriptionData) {
-    const response = await api.post('/api/subscriptions', subscriptionData);
-    return response.data;
+    return apiClient.post<Subscription>('/api/subscriptions', subscriptionData);
   },
   
   /**
@@ -86,8 +82,7 @@ const SubscriptionService = {
    * @returns Updated subscription
    */
   async cancelSubscription(id: string) {
-    const response = await api.put(`/api/subscriptions/${id}/cancel`);
-    return response.data;
+    return apiClient.put<Subscription>(`/api/subscriptions/${id}/cancel`, {});
   },
   
   /**
@@ -96,8 +91,7 @@ const SubscriptionService = {
    * @returns Updated subscription
    */
   async renewSubscription(id: string) {
-    const response = await api.put(`/api/subscriptions/${id}/renew`);
-    return response.data;
+    return apiClient.put<Subscription>(`/api/subscriptions/${id}/renew`, {});
   },
   
   /**
@@ -106,8 +100,7 @@ const SubscriptionService = {
    * @returns Array of recent subscriptions
    */
   async getRecentSubscriptions(limit: number = 5) {
-    const response = await api.get('/api/subscriptions/recent', { params: { limit } });
-    return response.data;
+    return apiClient.get<Subscription[]>(`/api/subscriptions/recent?limit=${limit}`);
   }
 };
 

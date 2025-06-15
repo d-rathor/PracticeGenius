@@ -1,4 +1,4 @@
-import api from './api';
+import apiClient from '@/lib/api';
 
 export interface LoginCredentials {
   email: string;
@@ -31,14 +31,14 @@ const AuthService = {
    * @returns AuthResponse with token and user data
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/api/auth/login', credentials);
+    const response = await apiClient.post<AuthResponse>('/api/auth/login', credentials);
     
     // Store token in localStorage (client-side only)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', response.data.token);
+      localStorage.setItem('practicegenius_token', response.token);
     }
     
-    return response.data;
+    return response;
   },
   
   /**
@@ -47,14 +47,14 @@ const AuthService = {
    * @returns AuthResponse with token and user data
    */
   async register(userData: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/api/auth/register', userData);
+    const response = await apiClient.post<AuthResponse>('/api/auth/register', userData);
     
     // Store token in localStorage (client-side only)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', response.data.token);
+      localStorage.setItem('practicegenius_token', response.token);
     }
     
-    return response.data;
+    return response;
   },
   
   /**
@@ -62,8 +62,8 @@ const AuthService = {
    * @returns User profile data
    */
   async getProfile() {
-    const response = await api.get('/api/auth/me');
-    return response.data;
+    const response = await apiClient.get<any>('/api/auth/me');
+    return response;
   },
   
   /**
@@ -72,7 +72,7 @@ const AuthService = {
   logout() {
     // Only run on client side
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('practicegenius_token');
     }
   },
   
@@ -83,7 +83,8 @@ const AuthService = {
   isAuthenticated(): boolean {
     // Only run on client side
     if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('auth_token');
+      const token = localStorage.getItem('practicegenius_token');
+      return !!token;
     }
     return false;
   }

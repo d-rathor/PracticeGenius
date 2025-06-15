@@ -1,4 +1,4 @@
-import api from './api';
+import apiClient from '@/lib/api';
 
 export interface SubscriptionSettings {
   plans: Array<{
@@ -32,8 +32,7 @@ const SettingsService = {
    * @returns Subscription settings data
    */
   async getSubscriptionSettings() {
-    const response = await api.get('/api/settings/subscription');
-    return response.data;
+    return apiClient.get<SubscriptionSettings>('/api/settings/subscription');
   },
   
   /**
@@ -42,8 +41,7 @@ const SettingsService = {
    * @returns Updated settings
    */
   async updateSubscriptionSettings(settings: SubscriptionSettings) {
-    const response = await api.put('/api/settings/subscription', settings);
-    return response.data;
+    return apiClient.put<SubscriptionSettings>('/api/settings/subscription', settings);
   },
   
   /**
@@ -51,8 +49,7 @@ const SettingsService = {
    * @returns Site settings data
    */
   async getSiteSettings() {
-    const response = await api.get('/api/settings/site');
-    return response.data;
+    return apiClient.get<SiteSettings>('/api/settings/site');
   },
   
   /**
@@ -61,8 +58,7 @@ const SettingsService = {
    * @returns Updated settings
    */
   async updateSiteSettings(settings: SiteSettings) {
-    const response = await api.put('/api/settings/site', settings);
-    return response.data;
+    return apiClient.put<SiteSettings>('/api/settings/site', settings);
   },
   
   /**
@@ -71,8 +67,7 @@ const SettingsService = {
    * @returns Settings data
    */
   async getSettingsByType(type: string) {
-    const response = await api.get(`/api/settings/${type}`);
-    return response.data;
+    return apiClient.get<any>(`/api/settings/${type}`);
   },
   
   /**
@@ -82,8 +77,7 @@ const SettingsService = {
    * @returns Updated settings
    */
   async updateSettingsByType(type: string, data: any) {
-    const response = await api.put(`/api/settings/${type}`, data);
-    return response.data;
+    return apiClient.put<any>(`/api/settings/${type}`, data);
   }
 };
 
