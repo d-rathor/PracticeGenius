@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Readable } from 'node:stream'; // Import Node.js Readable
-import type { ReadableStream as WebReadableStreamType } from 'node:stream/web'; // Renamed for clarity
+import { Readable } from 'node:stream';
+// Keep the aliased import for WebReadableStream from node:stream/web for potential use,
+// but we'll try to avoid explicitly casting to it for the bodyToSend assignment.
+import type { ReadableStream as WebReadableStreamType } from 'node:stream/web'; 
 import { WritableStream as WebWritableStream } from 'node:stream/web';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -39,10 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let bodyToSend: BodyInit | null | undefined = undefined;
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       if (req.headers['content-type']?.includes('multipart/form-data')) {
-        // Explicitly type req as a Node.js Readable stream for toWeb()
-        const nodeReadableStream = req as Readable; 
-        const webReadableStream = Readable.toWeb(nodeReadableStream);
-        bodyToSend = webReadableStream as WebReadableStreamType<Uint8Array>; // Cast to the aliased type
+        const nodeReadableStream = req as Readable;
+        // Assign directly; BodyInit should accept ReadableStream from toWeb()
+        bodyToSend = Readable.toWeb(nodeReadableStream); 
       } else if (req.body) {
         bodyToSend = JSON.stringify(req.body);
         headersToForward['content-length'] = Buffer.byteLength(bodyToSend).toString();
@@ -56,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: req.method,
       headers: headersToForward,
       body: bodyToSend,
-      // @ts-ignore // Keep ts-ignore for duplex if it's problematic, or refine its type
+      // @ts-ignore
       duplex: (req.method !== 'GET' && req.method !== 'HEAD' && bodyToSend && typeof bodyToSend !== 'string' && !(bodyToSend instanceof URLSearchParams) && !(bodyToSend instanceof FormData) && !(bodyToSend instanceof Blob) && !(bodyToSend instanceof ArrayBuffer) && !(ArrayBuffer.isView(bodyToSend)) ) ? 'half' : undefined,
     });
 
