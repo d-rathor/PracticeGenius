@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import UserService from '@/services/user.service';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -24,63 +25,27 @@ const AdminUsersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const loadUsers = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
-        // Check if token exists
-        const token = localStorage.getItem('practicegenius_token');
-        if (!token) {
-          console.error('No authentication token found');
-          window.location.href = '/auth/login?redirect=' + encodeURIComponent('/admin/users');
-          return;
-        }
-        
-        try {
-          const apiUrl = 'http://localhost:8080/api/users';
-          console.log('Fetching users from:', apiUrl);
-          
-          const response = await fetch(apiUrl, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-          });
-          
-          if (!response.ok) {
-            // If unauthorized, redirect to login
-            if (response.status === 401) {
-              console.error('Unauthorized access. Redirecting to login...');
-              localStorage.removeItem('practicegenius_token'); // Clear invalid token
-              window.location.href = '/auth/login?redirect=' + encodeURIComponent('/admin/users');
-              return;
-            }
-            throw new Error(`Failed to fetch users: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          // The backend returns users in data.data format
-          const usersData = data.data || [];
-          setUsers(usersData);
-          setFilteredUsers(usersData);
-        } catch (apiError) {
-          console.error('API error:', apiError);
-          // Fall back to empty array
-          setUsers([]);
-          setFilteredUsers([]);
-        }
+        // UserService now handles the API call and token management
+        const response = await UserService.getUsers();
+        // The backend returns users in data.data format, which is handled by the service
+        const usersData = response.data || [];
+        setUsers(usersData);
+        setFilteredUsers(usersData);
       } catch (error) {
         console.error('Error fetching users:', error);
-        // Initialize with empty arrays instead of mock data
+        // Handle error, e.g., redirect to login on 401, which the api client should do.
+        // For now, just clear the users list.
         setUsers([]);
         setFilteredUsers([]);
       } finally {
         setIsLoading(false);
       }
     };
-    
-    fetchUsers();
+
+    loadUsers();
   }, []);
 
 
