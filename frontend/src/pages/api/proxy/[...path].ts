@@ -1,14 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Readable } from 'node:stream';
 import { WritableStream as WebWritableStream } from 'node:stream/web';
-// Removed unused import: import type { ReadableStream as WebReadableStreamType } from 'node:stream/web'; 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (process.env.NODE_ENV === 'production') {
-    console.log('[PROXY /api/proxy/[...path].ts] This route is disabled in production. Netlify redirects should handle proxying.');
+  // Log the environment variables to understand the context
+  console.log(`[PROXY /api/proxy/[...path].ts] Runtime NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`[PROXY /api/proxy/[...path].ts] Runtime NETLIFY_CONTEXT: ${process.env.NETLIFY_CONTEXT}`); // Netlify-specific context
+
+  if (process.env.NODE_ENV === 'production' || process.env.NETLIFY_CONTEXT === 'production') {
+    console.log('[PROXY /api/proxy/[...path].ts] This route is disabled in production environment. Netlify redirects should handle proxying.');
     res.status(404).json({ message: 'API proxy not available through this route in production. Check Netlify redirects.' });
     return;
   }
+
+  // If we reach here in a supposed "production" deployment, something is wrong with env var detection or redirects.
+  console.warn('[PROXY /api/proxy/[...path].ts] WARNING: Executing local dev proxy logic in what might be a production environment. Check NODE_ENV and Netlify redirects.');
 
   const { path } = req.query;
   const targetPath = Array.isArray(path) ? path.join('/') : path;
@@ -22,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const cleanBackendApiUrl = backendApiUrl.endsWith('/') ? backendApiUrl.slice(0, -1) : backendApiUrl;
   const cleanTargetPath = targetPath.startsWith('/') ? targetPath.slice(1) : targetPath;
   const targetUrl = `${cleanBackendApiUrl}/${cleanTargetPath}`;
-  console.log(`[PROXY /api/proxy/[...path].ts] LOCAL DEV: Forwarding to: ${targetUrl}`);
+  console.log(`[PROXY /api/proxy/[...path].ts] LOCAL DEV LOGIC: Forwarding to: ${targetUrl}`);
 
   try {
     const headersToForward: Record<string, string> = {};
@@ -55,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: req.method,
       headers: headersToForward,
       body: bodyToSend,
-      // @ts-ignore - Keep ts-ignore for duplex if it's problematic or refine its type
+      // @ts-ignore 
       duplex: (req.method !== 'GET' && req.method !== 'HEAD' && bodyToSend && typeof bodyToSend !== 'string' && !(bodyToSend instanceof URLSearchParams) && !(bodyToSend instanceof FormData) && !(bodyToSend instanceof Blob) && !(bodyToSend instanceof ArrayBuffer) && !(ArrayBuffer.isView(bodyToSend)) ) ? 'half' : undefined,
     });
 
@@ -67,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     
     if (proxyResponse.body) {
-      // @ts-ignore - If pipeTo also causes issues, this might be needed
+      // @ts-ignore 
       await proxyResponse.body.pipeTo(new WebWritableStream({
         write(chunk) {
           res.write(chunk);
@@ -76,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           res.end();
         },
         abort(err) {
-          console.error('[PROXY /api/proxy/[...path].ts] LOCAL DEV: Stream aborted:', err);
+          console.error('[PROXY /api/proxy/[...path].ts] LOCAL DEV LOGIC: Stream aborted:', err);
           if (!res.writableEnded) {
             res.status(500).end('Proxy stream error');
           }
@@ -87,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
   } catch (error: any) {
-    console.error(`[PROXY /api/proxy/[...path].ts] LOCAL DEV: Error proxying to ${targetUrl}:`, error);
+    console.error(`[PROXY /api/proxy/[...path].ts] LOCAL DEV LOGIC: Error proxying to ${targetUrl}:`, error);
     if (!res.writableEnded) {
         if (error.code === 'ECONNREFUSED') {
             res.status(502).json({ error: 'Bad Gateway: Could not connect to the backend service.' , details: `Connection refused at ${targetUrl}`});
