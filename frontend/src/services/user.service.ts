@@ -37,11 +37,11 @@ const UserService = {
     console.log('[UserService.getUsers] Using apiClient with API_BASE_URL:', apiClient.API_BASE_URL);
     console.log('[UserService.getUsers] apiClient object reference check:', typeof apiClient.get === 'function' ? 'apiClient.get is a function' : 'apiClient.get is NOT a function or apiClient is unexpected');
     try {
-      const response = await apiClient.get('/api/users', {
+      const response = await apiClient.get<User[]>('/api/users', {
         params: { page, limit }
       });
       console.log('[UserService.getUsers] Successfully fetched users (response status will be in network tab):', response ? 'Response received' : 'No response object');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('[UserService.getUsers] Error fetching users in UserService:', error);
       throw error;
@@ -54,8 +54,8 @@ const UserService = {
    * @returns User data
    */
   async getUserById(id: string) {
-    const response = await api.get(`/api/users/${id}`);
-    return response.data;
+    const response = await apiClient.get<User>(`/api/users/${id}`);
+    return response;
   },
   
   /**
@@ -65,8 +65,8 @@ const UserService = {
    * @returns Updated user
    */
   async updateUser(id: string, userData: UpdateUserData) {
-    const response = await api.put(`/api/users/${id}`, userData);
-    return response.data;
+    const response = await apiClient.put<User>(`/api/users/${id}`, userData);
+    return response;
   },
   
   /**
@@ -75,8 +75,8 @@ const UserService = {
    * @returns Success message
    */
   async deleteUser(id: string) {
-    const response = await api.delete(`/api/users/${id}`);
-    return response.data;
+    const response = await apiClient.delete<any>(`/api/users/${id}`);
+    return response;
   },
   
   /**
@@ -85,8 +85,8 @@ const UserService = {
    * @returns User's download history
    */
   async getUserDownloadHistory(id: string) {
-    const response = await api.get(`/api/users/${id}/downloads`);
-    return response.data;
+    const response = await apiClient.get<Array<{ worksheet: string; downloadedAt: string; }>>(`/api/users/${id}/downloads`);
+    return response;
   },
   
   /**
@@ -95,10 +95,10 @@ const UserService = {
    * @returns Array of recent users
    */
   async getRecentUsers(limit: number = 5) {
-    const response = await api.get('/api/users/recent', {
+    const response = await apiClient.get<User[]>('/api/users/recent', {
       params: { limit }
     });
-    return response.data;
+    return response;
   }
 };
 
