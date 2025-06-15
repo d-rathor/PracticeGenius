@@ -1,18 +1,21 @@
 [build]
-  base = "frontend"
+  base = "." # Ensures Netlify uses the 'frontend' directory as the project root
   command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--legacy-peer-deps"
-  NEXT_PUBLIC_API_URL = "https://practicegenius-api.onrender.com"
+  # This NEXT_PUBLIC_API_URL is for build time if needed by Next.js pages
+  # The runtime proxy will use the Netlify redirect rule below for /api/proxy/*
+  NEXT_PUBLIC_API_URL = "https://practicegenius-api.onrender.com" 
 
 # Next.js specific settings
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Handle all routes with Next.js
+# Handle all routes with Next.js (this is usually handled by the plugin-nextjs)
+# Keeping it for now, but might be redundant.
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/next"
@@ -31,24 +34,25 @@
   status = 301
   force = true
 
-# API proxy for production
+# API proxy for production using Netlify redirects
+# This rule should catch requests like /api/proxy/worksheets
+# and send them to https://practicegenius-api.onrender.com/api/worksheets
 [[redirects]]
-  from = "/api/*"
+  from = "/api/proxy/*" 
   to = "https://practicegenius-api.onrender.com/api/:splat"
   status = 200
-  force = true
-  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept, Authorization"}
+  force = true # Ensures this redirect takes precedence
+  # Optional: Add headers if needed by your backend for CORS, though backend should handle CORS
+  # headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept, Authorization"}
 
-# API proxy for local development
+# API proxy for local development (netlify dev)
+# This rule is only active when `netlify dev` is used and conditions are met.
+# It should NOT interfere with production.
 [[redirects]]
-  from = "/api/*"
+  from = "/api/*" 
   to = "http://localhost:8080/api/:splat"
   status = 200
-  force = false
-  conditions = {Role = ["anonymous"], Environment = ["development"]}
+  force = false # Typically false for conditional redirects
+  conditions = {Role = ["anonymous"], Environment = ["development"]} # Example conditions
 
-# Proper 404 handling
-[[redirects]]
-  from = "/*"
-  to = "/404"
-  status = 404
+# Proper 404 handling (usually handled by Next.js)
