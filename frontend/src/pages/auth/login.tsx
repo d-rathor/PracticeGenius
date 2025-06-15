@@ -7,8 +7,12 @@ import apiClient from '@/lib/api'; // Import apiClient
 
 interface LoginResponse {
   token: string;
-  // Add other properties from the login response if needed, e.g., user details
-  // user?: { id: string; name: string; email: string; role: string };
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
 }
 
 const LoginPage: React.FC = () => {
