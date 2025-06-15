@@ -24,17 +24,6 @@
   status = 301
   force = true
 
-# API proxy for production using Netlify redirects
-# This rule should catch requests like /api/proxy/worksheets
-# and send them to https://practicegenius-api.onrender.com/api/worksheets
-[[redirects]]
-  from = "/api/proxy/*" 
-  to = "https://practicegenius-api.onrender.com/api/:splat"
-  status = 200
-  force = true # Ensures this redirect takes precedence
-  # Optional: Add headers if needed by your backend for CORS, though backend should handle CORS
-  # headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept, Authorization"}
-
 # API proxy for local development (netlify dev)
 # This rule is only active when `netlify dev` is used and conditions are met.
 # It should NOT interfere with production.
