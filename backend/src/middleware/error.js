@@ -7,11 +7,18 @@ const ApiError = require('../utils/ApiError');
  * Error handling middleware
  */
 const errorHandler = (err, req, res, next) => {
-  let error = { ...err }; // Clone the error object
-  error.message = err.message; // Ensure message is copied
-
+  // Preserve original ApiError properties if no specific handler transforms it
+  let error = { ...err };
+  error.message = err.message; // Ensure message is copied from original err
   error.statusCode = err.statusCode || 500;
   error.status = err.status || 'error';
+  
+  // Explicitly carry over isOperational if the original error had it
+  // This is important if the spread ({...err}) somehow loses it or it gets overwritten
+  // by a default 'undefined' if not present on a generic Error object.
+  if (err.isOperational !== undefined) {
+    error.isOperational = err.isOperational;
+  }
 
   // Log all errors in development for easier debugging
   if (process.env.NODE_ENV === 'development') {
@@ -69,9 +76,10 @@ const errorHandler = (err, req, res, next) => {
       message: error.message,
       statusCode: error.statusCode,
       status: error.status,
-      isOperational: error.isOperational,
-      name: error.name, // Original error name if available
-      originalStack: err.stack // Stack of the original error passed to the handler
+      isOperational: error.isOperational, // Check this value
+      name: error.name, 
+      originalName: err.name, // Also log original error's name
+      originalIsOperational: err.isOperational // And original isOperational
     });
   }
   // --- END NEW LOG ---
