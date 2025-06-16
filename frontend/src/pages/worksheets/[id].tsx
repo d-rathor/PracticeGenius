@@ -161,13 +161,19 @@ const WorksheetDetailPage: React.FC = () => {
         throw new Error('Download URL not provided by the server.');
       }
     } catch (err: any) {
-      // Check for the specific subscription error message
-      if (err.message && err.message.toLowerCase().includes('subscription')) {
-        setIsSubscriptionModalOpen(true);
-        // Do not log or setDownloadError here, as we are handling it with the modal
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to initiate download.';
+      const isSubscriptionError = errorMessage.toLowerCase().includes('subscription') || errorMessage.toLowerCase().includes('limit');
+      
+      if (err.response?.status === 403 && isSubscriptionError) {
+        // For 403 errors related to subscription or limits, show the modal.
+        // You might want to customize the modal message based on the exact error.
+        setIsSubscriptionModalOpen(true); 
+        // Optionally, you could set a specific message for the modal here if it supports dynamic content.
+        // For now, it will show the generic "Premium Subscription Required" message.
+        // If you want to show "Download limit reached", the modal needs to be more flexible.
       } else {
-        console.error('Download error:', err); // Log only if it's an unexpected error
-        setDownloadError(err.response?.data?.message || err.message || 'Failed to initiate download.');
+        console.error('Download error:', err); 
+        setDownloadError(errorMessage);
       }
     } finally {
       setIsDownloading(false);

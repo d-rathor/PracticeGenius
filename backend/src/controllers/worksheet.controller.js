@@ -348,7 +348,7 @@ exports.downloadWorksheet = asyncHandler(async (req, res) => {
 
       // Check against limits
       const limits = {
-        Free: 3,
+        Free: 10, // Increased from 3 to 10 as per request
         Essential: 10,
       };
 
