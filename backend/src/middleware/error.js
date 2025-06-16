@@ -63,6 +63,19 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Production error response
+  // --- BEGIN NEW LOG ---
+  if (process.env.NODE_ENV !== 'development') { // Only log this in non-dev (like production)
+    console.log('PROD ERROR HANDLER - Error object before isOperational check:', {
+      message: error.message,
+      statusCode: error.statusCode,
+      status: error.status,
+      isOperational: error.isOperational,
+      name: error.name, // Original error name if available
+      originalStack: err.stack // Stack of the original error passed to the handler
+    });
+  }
+  // --- END NEW LOG ---
+
   if (error.isOperational) {
     return res.status(error.statusCode).json({
       success: false,
