@@ -36,7 +36,7 @@ const WorksheetDetailPage: React.FC = () => {
   const [worksheet, setWorksheet] = useState<Worksheet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext(); // Added user from context
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
@@ -142,6 +142,31 @@ const WorksheetDetailPage: React.FC = () => {
     });
   };
 
+  // Helper function to determine if the user can access the worksheet content
+  const canUserAccessWorksheet = (
+    worksheetSubscriptionLevel: 'Free' | 'Essential' | 'Premium',
+    userRole: string | undefined,
+    userSubscriptionPlanName: string | undefined
+  ): boolean => {
+    if (!isAuthenticated) return worksheetSubscriptionLevel === 'Free'; // Anonymous users can only see Free previews
+    if (userRole === 'admin') {
+      return true;
+    }
+
+    const levels = { Free: 0, Essential: 1, Premium: 2 };
+    const requiredLevel = levels[worksheetSubscriptionLevel];
+    
+    // Determine user's effective subscription level name
+    let effectiveUserPlanName: 'Free' | 'Essential' | 'Premium' = 'Free'; // Default for authenticated users without active sub
+    if (userSubscriptionPlanName && (userSubscriptionPlanName === 'Free' || userSubscriptionPlanName === 'Essential' || userSubscriptionPlanName === 'Premium')) {
+      effectiveUserPlanName = userSubscriptionPlanName;
+    }
+
+    const userLevel = levels[effectiveUserPlanName];
+
+    return userLevel >= requiredLevel;
+  };
+
   const handleDownload = async () => {
     if (!worksheet || !worksheet.id || !worksheet.fileKey) {
       setDownloadError('Worksheet data is incomplete or no file available for download.');
@@ -162,16 +187,15 @@ const WorksheetDetailPage: React.FC = () => {
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to initiate download.';
-      const isSubscriptionError = errorMessage.toLowerCase().includes('subscription') || errorMessage.toLowerCase().includes('limit');
       
-      if (err.response?.status === 403 && isSubscriptionError) {
-        // For 403 errors related to subscription or limits, show the modal.
-        // You might want to customize the modal message based on the exact error.
+      // If the error status is 403 (Forbidden), it's a subscription or limit issue.
+      // Show the subscription modal.
+      if (err.response?.status === 403) {
         setIsSubscriptionModalOpen(true); 
-        // Optionally, you could set a specific message for the modal here if it supports dynamic content.
-        // For now, it will show the generic "Premium Subscription Required" message.
-        // If you want to show "Download limit reached", the modal needs to be more flexible.
+        // The modal will show its default "Premium Subscription Required" message.
+        // Future enhancement: Pass a specific message to the modal if needed based on errorMessage.
       } else {
+        // For other errors (e.g., 500, network issues), log and show the generic error message.
         console.error('Download error:', err); 
         setDownloadError(errorMessage);
       }
@@ -294,9 +318,10 @@ const WorksheetDetailPage: React.FC = () => {
                       
                       <div> {/* Wrapper for Preview section */} 
                         <h2 className="text-xl font-semibold mb-3 text-gray-800">Preview</h2>
-                        {/* Document Preview Logic */}
-                        <div className="bg-gray-100 rounded-lg border border-gray-300 mb-6 min-h-[500px] overflow-hidden">
-                          {worksheet.fileUrl && worksheet.mimeType === 'application/pdf' ? (
+                        {/* Document Preview Logic with subscription check */} 
+                        {canUserAccessWorksheet(worksheet.subscriptionLevel, user?.role, user?.activeSubscription?.plan?.name) ? (
+                          <div className="bg-gray-100 rounded-lg border border-gray-300 mb-6 min-h-[500px] overflow-hidden">
+                            {worksheet.fileUrl && worksheet.mimeType === 'application/pdf' ? (
                             <iframe 
                               src={worksheet.fileUrl} 
                               title={`${worksheet.title} Preview`} 
@@ -330,7 +355,20 @@ const WorksheetDetailPage: React.FC = () => {
                               )}
                             </div>
                           )}
-                        </div>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-100 rounded-lg border border-gray-300 mb-6 min-h-[300px] overflow-hidden p-6 text-center flex flex-col items-center justify-center">
+                            <svg className="w-12 h-12 text-orange-500 mb-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 15v2m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+                            <p className="text-gray-700 font-medium mb-2">
+                              A <span className="font-semibold">{worksheet.subscriptionLevel}</span> subscription is required to preview this worksheet.
+                            </p>
+                            <Link href="/pricing" passHref>
+                              <Button className="mt-2 bg-orange-500 hover:bg-orange-600 text-white">
+                                Upgrade Your Plan
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
