@@ -23,7 +23,7 @@ interface Worksheet {
   imageUrl?: string; // Optional, as not all worksheets might have a preview image
   // Add fields related to the downloadable file, assuming backend provides them:
   fileKey?: string; 
-  fileUrl?: string; // This is the B2 URL, not the pre-signed one for direct download by user
+  fileUrl: string; // This is the B2 URL, not the pre-signed one for direct download by user
   originalFilename?: string;
   mimeType?: string;
   fileSize?: number;
@@ -215,15 +215,11 @@ const WorksheetDetailPage: React.FC = () => {
               {/* Worksheet Preview */}
               <div className="lg:w-1/3">
                 <Card className="h-full">
-                  <div className="h-64 bg-gray-200 rounded-t-lg overflow-hidden">
+                  <div className="relative w-full h-64 bg-gray-100 rounded-t-lg flex items-center justify-center overflow-hidden">
                     <img 
-                      src={worksheet.imageUrl || '/images/worksheet-placeholder.jpg'} 
+                      src={worksheet.imageUrl || '/images/Worksheet-logo-image.png'}
                       alt={worksheet.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/images/worksheet-placeholder.jpg';
-                      }}
+                      className="w-full h-full object-contain rounded-t-lg"
                     />
                   </div>
                   <CardContent className="flex flex-col items-center justify-center space-y-4 py-6">

@@ -49,7 +49,7 @@ const WorksheetsPage: React.FC = () => {
           subscriptionLevel: worksheet.subscriptionLevel || 'Free',
           downloads: worksheet.downloads || worksheet.downloadCount || 0,
           description: worksheet.description || 'No description available.',
-          imageUrl: worksheet.imageUrl || '/images/worksheet-placeholder.jpg',
+          imageUrl: worksheet.imageUrl || '/images/Worksheet-logo-image.png',
           createdAt: worksheet.createdAt || new Date().toISOString()
         }));
 
@@ -100,12 +100,17 @@ const WorksheetsPage: React.FC = () => {
     }
   };
 
-  const getSubscriptionPlanColor = (plan: string) => {
-    const normalizedPlan = plan?.toLowerCase() || 'free';
-    switch (normalizedPlan) {
-      case 'essential': return 'bg-blue-100 text-blue-800 border border-blue-200';
-      case 'premium': return 'bg-purple-100 text-purple-800 border border-purple-200';
-      default: return 'bg-gray-100 text-gray-800';
+  const getSubscriptionLevelColor = (level: string | undefined): string => {
+    if (!level) return 'bg-gray-100 text-gray-800';
+    switch (level.toLowerCase()) {
+      case 'free':
+        return 'bg-green-100 text-green-800';
+      case 'essential':
+        return 'bg-blue-100 text-blue-800';
+      case 'premium':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -185,12 +190,12 @@ const WorksheetsPage: React.FC = () => {
             {filteredWorksheets.map((worksheet) => (
               <Link key={worksheet._id} href={`/worksheets/${worksheet._id}`} passHref>
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
-                  <img src={worksheet.imageUrl} alt={worksheet.title} className="w-full h-48 object-cover rounded-t-lg" />
+                  <img src={worksheet.imageUrl} alt={worksheet.title} className="w-full h-40 object-cover rounded-t-lg" />
                   <CardContent className="p-4 flex flex-col flex-grow">
                     <div className="flex-grow">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{worksheet.title}</h3>
-                        <Badge className={getSubscriptionPlanColor(worksheet.subscriptionLevel)}>
+                        <Badge className={getSubscriptionLevelColor(worksheet.subscriptionLevel)}>
                           {worksheet.subscriptionLevel ?
                             worksheet.subscriptionLevel.charAt(0).toUpperCase() + worksheet.subscriptionLevel.slice(1).toLowerCase() :
                             'Free'}
