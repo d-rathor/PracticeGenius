@@ -7,6 +7,15 @@ interface User {
   name: string;
   email: string;
   role: 'admin' | 'user';
+  activeSubscription?: { // Optional to prevent build errors if not immediately available
+    id?: string; // Assuming an ID might be useful
+    plan?: {
+      id?: string; // Assuming an ID might be useful
+      name?: 'Free' | 'Essential' | 'Premium';
+      // Add other plan properties if they exist and are used, e.g., downloadLimit
+    };
+    // Add other subscription properties if they exist, e.g., status, endDate
+  };
 }
 
 // Auth context state
