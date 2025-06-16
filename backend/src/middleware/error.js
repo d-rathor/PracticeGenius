@@ -1,16 +1,7 @@
 /**
- * Custom error class for API errors
+ * Error handling middleware
  */
-class ApiError extends Error {
-  constructor(message, statusCode) {
-    super(message);
-    this.statusCode = statusCode;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    this.isOperational = true;
-
-    Error.captureStackTrace(this, this.constructor);
-  }
-}
+const ApiError = require('../utils/ApiError');
 
 /**
  * Error handling middleware
@@ -19,7 +10,7 @@ const errorHandler = (err, req, res, next) => {
   let error = { ...err }; // Clone the error object
   error.message = err.message; // Ensure message is copied
 
-    error.statusCode = err.statusCode || 500;
+  error.statusCode = err.statusCode || 500;
   error.status = err.status || 'error';
 
   // Log all errors in development for easier debugging

@@ -1,5 +1,5 @@
 const User = require('../models/user.model');
-const { APIError } = require('../middleware/error');
+const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/async-handler');
 
 /**
@@ -13,7 +13,7 @@ exports.register = asyncHandler(async (req, res) => {
   // Check if user already exists
   const userExists = await User.findOne({ email });
   if (userExists) {
-    throw new APIError('User already exists with this email', 400);
+    throw new ApiError('User already exists with this email', 400);
   }
 
   // Create new user
@@ -50,13 +50,13 @@ exports.login = asyncHandler(async (req, res) => {
   // Check for user email
   const user = await User.findOne({ email }).select('+password');
   if (!user) {
-    throw new APIError('Invalid credentials', 401);
+    throw new ApiError('Invalid credentials', 401);
   }
 
   // Check if password matches
   const isMatch = await user.matchPassword(password);
   if (!isMatch) {
-    throw new APIError('Invalid credentials', 401);
+    throw new ApiError('Invalid credentials', 401);
   }
 
   // Generate token
@@ -104,7 +104,7 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   if (email && email !== user.email) {
     const emailExists = await User.findOne({ email });
     if (emailExists) {
-      throw new APIError('Email is already taken', 400);
+      throw new ApiError('Email is already taken', 400);
     }
   }
 
@@ -135,7 +135,7 @@ exports.changePassword = asyncHandler(async (req, res) => {
   // Check current password
   const isMatch = await user.matchPassword(currentPassword);
   if (!isMatch) {
-    throw new APIError('Current password is incorrect', 401);
+    throw new ApiError('Current password is incorrect', 401);
   }
 
   // Set new password
