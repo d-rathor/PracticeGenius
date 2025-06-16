@@ -186,18 +186,25 @@ const WorksheetDetailPage: React.FC = () => {
         throw new Error('Download URL not provided by the server.');
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to initiate download.';
+      // --- BEGIN NEW LOGS ---
+      console.log('[handleDownload] Caught error object (stringified with own props):', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      console.log('[handleDownload] err.response (raw):', err.response);
+      console.log('[handleDownload] err.response?.status (from raw response):', err.response?.status);
+      console.log('[handleDownload] err.status (direct property on error object):', err.status);
+      console.log('[handleDownload] err.data (parsed error data from API client):', err.data);
+      console.log('[handleDownload] err.message (direct property on error object):', err.message);
+      // --- END NEW LOGS ---
+
+      const errorMessage = err.data?.message || err.response?.data?.message /* Prefer err.data.message if available */ || err.message || 'Failed to initiate download.';
       
-      // If the error status is 403 (Forbidden), it's a subscription or limit issue.
-      // Show the subscription modal.
-      if (err.response?.status === 403) {
+      if (err.response?.status === 403 || err.status === 403) { // Also check err.status directly as API client sets it
+        console.log('[handleDownload] Detected 403 error. Opening subscription modal.');
         setIsSubscriptionModalOpen(true); 
-        // The modal will show its default "Premium Subscription Required" message.
-        // Future enhancement: Pass a specific message to the modal if needed based on errorMessage.
+        // Future: Consider passing a specific message to the modal, e.g., setSubscriptionModalMessage(errorMessage);
       } else {
-        // For other errors (e.g., 500, network issues), log and show the generic error message.
-        console.error('Download error:', err); 
-        setDownloadError(errorMessage);
+        console.log(`[handleDownload] Error is not 403 (status from err.response: ${err.response?.status}, status from err.status: ${err.status}). Showing generic error message.`);
+        console.error('Download error details in [id].tsx:', err); 
+        setDownloadError(errorMessage); 
       }
     } finally {
       setIsDownloading(false);
