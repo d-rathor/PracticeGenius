@@ -126,6 +126,8 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  token?: string; // Token might not be present if verification is required
+  user?: User;    // User might not be present if verification is required
+  message?: string;
+  requiresVerification?: boolean;
 }

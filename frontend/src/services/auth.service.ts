@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api';
+import { AuthResponse, User } from '@/types';
 
 export interface LoginCredentials {
   email: string;
@@ -11,15 +12,6 @@ export interface RegisterData {
   password: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  };
-}
 
 /**
  * Authentication service for handling user login, registration, and profile
@@ -34,7 +26,7 @@ const AuthService = {
     const response = await apiClient.post<AuthResponse>('/api/auth/login', credentials);
     
     // Store token in localStorage (client-side only)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && response.token) {
       localStorage.setItem('practicegenius_token', response.token);
     }
     
@@ -50,7 +42,7 @@ const AuthService = {
     const response = await apiClient.post<AuthResponse>('/api/auth/register', userData);
     
     // Store token in localStorage (client-side only)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && response.token) {
       localStorage.setItem('practicegenius_token', response.token);
     }
     
