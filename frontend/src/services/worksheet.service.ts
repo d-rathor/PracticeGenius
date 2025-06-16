@@ -106,8 +106,8 @@ const WorksheetService = {
    */
   async downloadWorksheet(id: string) {
     // Corrected to GET request as per backend route definition
-    const response = await api.get<{ downloadUrl: string }>(`/api/worksheets/${id}/download`);
-    return response; // Expects { downloadUrl: '...' }
+    const response = await api.get<{ success: boolean, data: { downloadUrl: string } }>(`/api/worksheets/${id}/download`);
+    return response; // Expects { success: boolean, data: { downloadUrl: '...' } }
   },
   
   /**

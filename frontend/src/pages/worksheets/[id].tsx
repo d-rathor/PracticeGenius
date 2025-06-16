@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuthContext } from '@/contexts/AuthContext';
 import WorksheetService from '@/services/worksheet.service'; // Import WorksheetService
 import { Button } from '@/components/ui/Button'; // Assuming Button component exists and is styled
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
 
 interface Worksheet {
   id: string;
@@ -14,6 +15,7 @@ interface Worksheet {
   subject: string;
   grade: string;
   difficulty: string;
+  subscriptionLevel: 'Free' | 'Essential' | 'Premium';
   description: string;
   content: string;
   downloadCount: number;
@@ -37,6 +39,7 @@ const WorksheetDetailPage: React.FC = () => {
   const { isAuthenticated } = useAuthContext();
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   // Authentication state is now handled by useAuthContext
 
@@ -46,18 +49,33 @@ const WorksheetDetailPage: React.FC = () => {
     const fetchWorksheet = async () => {
       try {
         setIsLoading(true);
-        
-        // Use the environment variable for API URL
+
+        // Get token from localStorage to make an authenticated request if available
+        const token = localStorage.getItem('practicegenius_token');
+        const headers: HeadersInit = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/worksheets/${id}`;
-        console.log('Fetching worksheet from:', apiUrl, 'Environment:', process.env.NODE_ENV);
-        const response = await fetch(apiUrl);
-        
+        console.log('Fetching worksheet from:', apiUrl, 'Authenticated:', !!token);
+
+        const response = await fetch(apiUrl, { headers });
+
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
-        const data = await response.json();
-        setWorksheet(data);
+
+        const responseData = await response.json();
+
+        // The actual worksheet data is nested in the 'data' property from our API
+        if (responseData && responseData.data) {
+          setWorksheet(responseData.data);
+        } else {
+          // Fallback for cases where the structure might be flat (e.g., from a different source)
+          setWorksheet(responseData);
+        }
+
         setIsLoading(false);
       } catch (err) {
         console.error('Failed to fetch worksheet:', err);
@@ -101,6 +119,20 @@ const WorksheetDetailPage: React.FC = () => {
     }
   };
 
+  const getSubscriptionLevelColor = (level: string | undefined): string => {
+    if (!level) return 'bg-gray-100 text-gray-800';
+    switch (level.toLowerCase()) {
+      case 'free':
+        return 'bg-green-100 text-green-800'; // Or another color for Free
+      case 'essential':
+        return 'bg-blue-100 text-blue-800'; // Or another color for Essential
+      case 'premium':
+        return 'bg-purple-100 text-purple-800'; // Or another color for Premium
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -120,34 +152,23 @@ const WorksheetDetailPage: React.FC = () => {
     setDownloadError(null);
     try {
       const response = await WorksheetService.downloadWorksheet(worksheet.id);
-      if (response && response.downloadUrl) {
-        // Initiate download
-        // Using window.location.href is simpler and usually sufficient
-        window.location.href = response.downloadUrl;
+      const downloadUrl = response?.data?.downloadUrl;
 
-        // // Alternative: Create a temporary link to trigger download with a specific filename
-        // const link = document.createElement('a');
-        // link.href = response.downloadUrl;
-        // // The 'download' attribute suggests a filename to the browser.
-        // // It might not work for cross-origin URLs like pre-signed S3/B2 URLs without specific CORS headers from B2.
-        // // However, B2 pre-signed URLs often include Content-Disposition headers that suggest the filename.
-        // if (worksheet.originalFilename) {
-        //   link.setAttribute('download', worksheet.originalFilename);
-        // }
-        // // link.target = '_blank'; // Optional: to open in a new tab if desired
-        // document.body.appendChild(link);
-        // link.click();
-        // document.body.removeChild(link);
-
-        // Optionally, you could try to update download count on the frontend optimistically
-        // or refetch worksheet data, but this is often handled by backend or analytics.
-
+      if (downloadUrl) {
+        window.open(downloadUrl, '_blank');
       } else {
+        console.error('API response did not contain a download URL:', response);
         throw new Error('Download URL not provided by the server.');
       }
     } catch (err: any) {
-      console.error('Download error:', err);
-      setDownloadError(err.response?.data?.message || err.message || 'Failed to initiate download.');
+      // Check for the specific subscription error message
+      if (err.message && err.message.toLowerCase().includes('subscription')) {
+        setIsSubscriptionModalOpen(true);
+        // Do not log or setDownloadError here, as we are handling it with the modal
+      } else {
+        console.error('Download error:', err); // Log only if it's an unexpected error
+        setDownloadError(err.response?.data?.message || err.message || 'Failed to initiate download.');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -207,6 +228,11 @@ const WorksheetDetailPage: React.FC = () => {
                   </div>
                   <CardContent className="flex flex-col items-center justify-center space-y-4 py-6">
                     <div className="flex flex-wrap gap-2 justify-center">
+                      {worksheet.subscriptionLevel && (
+                        <Badge className={getSubscriptionLevelColor(worksheet.subscriptionLevel)}>
+                          {worksheet.subscriptionLevel}
+                        </Badge>
+                      )}
                       <Badge className={getSubjectColor(worksheet.subject)}>
                         {worksheet.subject}
                       </Badge>
@@ -217,14 +243,9 @@ const WorksheetDetailPage: React.FC = () => {
                         {worksheet.difficulty}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      <span>{worksheet.downloadCount} downloads</span>
-                      <span className="mx-2">•</span>
-                      <span>Created {formatDate(worksheet.dateCreated)}</span>
-                    </p>
-                    
                     {/* Conditional rendering for download button */}
-                    {isAuthenticated && worksheet && worksheet.fileKey ? (
+                    {/* The 'downloads • Created Date' text has been removed. The button below is now the primary action item in this section. */}
+                    {isAuthenticated && worksheet && worksheet.fileKey && (
                       <Button 
                         onClick={handleDownload}
                         disabled={isDownloading}
@@ -233,30 +254,10 @@ const WorksheetDetailPage: React.FC = () => {
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        {isDownloading ? 'Downloading...' : 'Download Worksheet'}
+                        {isDownloading ? 'Downloading...' : 'Download'}
                       </Button>
-                    ) : isAuthenticated && worksheet && !worksheet.fileKey ? (
-                      <p className="text-sm text-gray-500 text-center py-2">No downloadable file associated with this worksheet.</p>
-                    ) : (
-                    
-                      <div className="space-y-3 w-full">
-                        <Link 
-                          href={`/auth/login?redirect=${encodeURIComponent(`/worksheets/${id}`)}`}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center"
-                        >
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                          </svg>
-                          Log in to Download
-                        </Link>
-                        <Link 
-                          href="/pricing"
-                          className="w-full border border-orange-500 text-orange-500 hover:bg-orange-50 py-2 px-4 rounded transition duration-300 flex items-center justify-center"
-                        >
-                          View Subscription Plans
-                        </Link>
-                      </div>
                     )}
+                    {/* If not authenticated or no fileKey, nothing else is explicitly rendered here regarding download options */}
                     {downloadError && <p className="text-sm text-red-500 mt-2 text-center">Error: {downloadError}</p>}
                   </CardContent>
                 </Card>
@@ -269,104 +270,99 @@ const WorksheetDetailPage: React.FC = () => {
                     <h1 className="text-2xl font-bold text-gray-900">{worksheet.title}</h1>
                   </CardHeader>
                   <CardContent>
-                    <div className="prose max-w-none">
-                      <h2 className="text-lg font-semibold mb-2">Description</h2>
-                      <p className="mb-6">{worksheet.description}</p>
-                      
-                      <h2 className="text-lg font-semibold mb-2">Preview</h2>
-                      <div className="bg-gray-50 p-4 rounded border border-gray-200 mb-6 relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white flex items-end justify-center pb-4">
-                          <div className="text-center">
-                            <p className="font-medium text-gray-900 mb-2">Log in or subscribe to view full content</p>
-                            <Link 
-                              href="/pricing"
-                              className="inline-block bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded transition duration-300"
-                            >
-                              View Pricing Plans
-                            </Link>
-                          </div>
+                    <div className="space-y-6"> {/* Replaced prose for more direct control, added space-y-6 for overall spacing */}
+                      <div className="space-y-3">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Grade</h3>
+                          <p className="mt-1 text-lg text-gray-900">{worksheet.grade || 'N/A'}</p>
                         </div>
-                        <p className="text-gray-600 blur-sm select-none">{worksheet.content}</p>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Subject</h3>
+                          <p className="mt-1 text-lg text-gray-900">{worksheet.subject || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Title</h3>
+                          <p className="mt-1 text-lg text-gray-900">{worksheet.title || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Description</h3>
+                          <p className="mt-1 text-gray-700 leading-relaxed">{worksheet.description || 'No description available.'}</p>
+                        </div>
                       </div>
                       
-                      <h2 className="text-lg font-semibold mb-2">Learning Objectives</h2>
-                      <ul className="list-disc pl-5 space-y-1 mb-6">
-                        <li>Master basic addition with numbers 1-20</li>
-                        <li>Practice subtraction skills</li>
-                        <li>Develop mental math abilities</li>
-                        <li>Build confidence in solving math problems</li>
-                      </ul>
-                      
-                      <h2 className="text-lg font-semibold mb-2">Instructions</h2>
-                      <ol className="list-decimal pl-5 space-y-1">
-                        <li>Download the worksheet by clicking the button</li>
-                        <li>Print on standard letter-sized paper</li>
-                        <li>Allow students 20-30 minutes to complete</li>
-                        <li>Review answers together as a class</li>
-                      </ol>
+                      <div> {/* Wrapper for Preview section */} 
+                        <h2 className="text-xl font-semibold mb-3 text-gray-800">Preview</h2>
+                        {/* Document Preview Logic */}
+                        <div className="bg-gray-100 rounded-lg border border-gray-300 mb-6 min-h-[500px] overflow-hidden">
+                          {worksheet.fileUrl && worksheet.mimeType === 'application/pdf' ? (
+                            <iframe 
+                              src={worksheet.fileUrl} 
+                              title={`${worksheet.title} Preview`} 
+                              width="100%" 
+                              height="500px" 
+                              style={{ border: 'none' }}
+                            />
+                          ) : worksheet.fileUrl && (worksheet.mimeType === 'application/msword' || worksheet.mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
+                            <div className="p-6 text-center flex flex-col items-center justify-center h-full">
+                              <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path><path d="M14.5 3.5V9h5.5"></path><path d="M9 13h6"></path><path d="M9 17h3"></path></svg>
+                              <p className="text-gray-600 font-medium">Preview is not available for Word documents.</p>
+                              <p className="text-sm text-gray-500 mt-1">Please download the file to view its content.</p>
+                              {isAuthenticated && worksheet.fileKey && (
+                                <Button 
+                                  onClick={handleDownload}
+                                  disabled={isDownloading}
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-4"
+                                >
+                                  {isDownloading ? 'Downloading...' : 'Download'}
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="p-6 text-center flex flex-col items-center justify-center h-full">
+                               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M7.828 19.828a4 4 0 01-5.656 0M12 6V5m0 14v-1m4.95-11.05l.707-.707m-10.607 0l-.707.707M5.05 19.95l.707.707m10.607 0l-.707-.707"></path></svg>
+                              <p className="text-gray-600 font-medium">No preview available for this worksheet.</p>
+                              {worksheet.fileKey && isAuthenticated && (
+                                <p className="text-sm text-gray-500 mt-1">You can try downloading the file.</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             </div>
 
-            {/* Related Worksheets */}
-            <Card className="mt-8">
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Related Worksheets</h2>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Link href="/worksheets/2" className="border rounded-lg p-4 flex items-center hover:bg-gray-50 transition-colors">
-                    <div className="h-16 w-16 bg-gray-200 rounded mr-4 flex-shrink-0"></div>
-                    <div>
-                      <h3 className="font-medium">Multiplication Basics</h3>
-                      <p className="text-sm text-gray-500">Math • Grade 3</p>
-                    </div>
-                  </Link>
-                  <Link href="/worksheets/3" className="border rounded-lg p-4 flex items-center hover:bg-gray-50 transition-colors">
-                    <div className="h-16 w-16 bg-gray-200 rounded mr-4 flex-shrink-0"></div>
-                    <div>
-                      <h3 className="font-medium">Number Patterns</h3>
-                      <p className="text-sm text-gray-500">Math • Grade 2</p>
-                    </div>
-                  </Link>
-                  <Link href="/worksheets/4" className="border rounded-lg p-4 flex items-center hover:bg-gray-50 transition-colors">
-                    <div className="h-16 w-16 bg-gray-200 rounded mr-4 flex-shrink-0"></div>
-                    <div>
-                      <h3 className="font-medium">Counting Money</h3>
-                      <p className="text-sm text-gray-500">Math • Grade 2</p>
-                    </div>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Related Worksheets section removed */}
 
-            {/* Subscribe CTA */}
-            {!isAuthenticated && (
-              <div className="mt-8 bg-orange-50 border border-orange-100 rounded-lg p-6 text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Get Unlimited Access</h2>
-                <p className="text-gray-600 mb-4">
-                  Subscribe to Practice Genius for unlimited access to all worksheets and premium features.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link 
-                    href="/pricing" 
-                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none"
-                  >
-                    View Pricing Plans
-                  </Link>
-                  <Link 
-                    href={`/auth/login?redirect=${encodeURIComponent(`/worksheets/${id}`)}`}
-                    className="inline-flex items-center px-6 py-3 border border-orange-500 text-base font-medium rounded-md text-orange-500 bg-white hover:bg-orange-50 focus:outline-none"
-                  >
-                    Log In
-                  </Link>
-                </div>
-              </div>
-            )}
           </>
         ) : null}
+
+        <Modal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} size="md">
+          <ModalHeader onClose={() => setIsSubscriptionModalOpen(false)}>
+            Premium Subscription Required
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-gray-600">
+              This worksheet is a premium resource. To download it, you need an active Premium subscription.
+            </p>
+            <p className="text-gray-600 mt-2">
+              Upgrade your plan to get unlimited access to all our premium content.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setIsSubscriptionModalOpen(false)}>
+              Close
+            </Button>
+            <Link href="/pricing">
+              <Button>Upgrade Now</Button>
+            </Link>
+          </ModalFooter>
+        </Modal>
+
       </div>
     </MainLayout>
   );

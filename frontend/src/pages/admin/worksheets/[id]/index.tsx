@@ -250,7 +250,7 @@ const WorksheetDetail = () => {
       
       // The backend route for download is a POST request to track downloads
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/worksheets/${id}/download`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
         }

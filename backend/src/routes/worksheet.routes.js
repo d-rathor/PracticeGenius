@@ -66,10 +66,10 @@ router.put('/:id',
 router.delete('/:id', auth, authorize(['admin']), deleteWorksheet);
 
 /**
- * @route   POST /api/worksheets/:id/download
+ * @route   GET /api/worksheets/:id/download
  * @desc    Download worksheet and track download
  * @access  Private (with subscription check)
  */
-router.post('/:id/download', auth, downloadWorksheet);
+router.get('/:id/download', auth, downloadWorksheet);
 
 module.exports = router;

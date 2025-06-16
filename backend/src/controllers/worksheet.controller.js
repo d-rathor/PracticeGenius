@@ -299,82 +299,96 @@ exports.deleteWorksheet = asyncHandler(async (req, res) => {
  */
 exports.downloadWorksheet = asyncHandler(async (req, res) => {
   const worksheet = await Worksheet.findById(req.params.id);
-  
+
   if (!worksheet) {
     throw new APIError('Worksheet not found', 404);
   }
-  
+
   // Check user's subscription level
   const user = await User.findById(req.user.id).populate('activeSubscription');
-  
+
   // If the user is not an admin, perform subscription and download limit checks
   if (user.role !== 'admin') {
     // Get user's subscription level
     let userSubscriptionLevel = 'Free';
     if (user.activeSubscription && user.activeSubscription.status === 'active') {
-      const subscription = await Subscription.findById(user.activeSubscription)
-        .populate('plan');
-      
+      const subscription = await Subscription.findById(user.activeSubscription).populate(
+        'plan'
+      );
+
       if (subscription && subscription.plan) {
         userSubscriptionLevel = subscription.plan.name;
       }
     }
-    
+
     // Check if user can access this worksheet based on subscription level
     const subscriptionLevels = ['Free', 'Essential', 'Premium'];
-    const worksheetLevelIndex = subscriptionLevels.indexOf(worksheet.subscriptionLevel);
+    const worksheetLevelIndex = subscriptionLevels.indexOf(
+      worksheet.subscriptionLevel
+    );
     const userLevelIndex = subscriptionLevels.indexOf(userSubscriptionLevel);
-    
+
     if (userLevelIndex < worksheetLevelIndex) {
-      throw new APIError(`You need a ${worksheet.subscriptionLevel} subscription to download this worksheet`, 403);
+      throw new APIError(
+        `You need a ${worksheet.subscriptionLevel} subscription to download this worksheet`,
+        403
+      );
     }
-    
+
     // Check download limits
     if (userSubscriptionLevel !== 'Premium') {
       // Get user's download count for today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const downloadCount = user.downloadHistory.filter(download => {
+
+      const downloadCount = user.downloadHistory.filter((download) => {
         const downloadDate = new Date(download.downloadedAt);
         return downloadDate >= today;
       }).length;
-      
+
       // Check against limits
       const limits = {
         Free: 3,
-        Essential: 10
+        Essential: 10,
       };
-      
+
       if (downloadCount >= limits[userSubscriptionLevel]) {
-        throw new APIError(`You have reached your daily download limit for ${userSubscriptionLevel} subscription`, 403);
+        throw new APIError(
+          `You have reached your daily download limit for ${userSubscriptionLevel} subscription`,
+          403
+        );
       }
     }
   }
-  
+
   // Add a defensive check to prevent validation errors for users missing a name.
   if (!user.name && user.email) {
-    console.warn(`User ${user._id} is missing a name. Setting a default from email to prevent crash.`);
+    console.warn(
+      `User ${user._id} is missing a name. Setting a default from email to prevent crash.`
+    );
     user.name = user.email.split('@')[0];
   }
 
   // Track download
   user.downloadHistory.push({
     worksheet: worksheet._id,
-    downloadedAt: Date.now()
+    downloadedAt: Date.now(),
   });
-  
+
   await user.save();
-  
+
   // Increment download count
   worksheet.downloads += 1;
   await worksheet.save();
-  
+
   if (!s3Client) {
     throw new APIError('S3 client not configured, cannot generate download URL.', 500);
   }
   if (!worksheet.fileKey) {
-    throw new APIError('File key not found for this worksheet, cannot generate download URL.', 404);
+    throw new APIError(
+      'File key not found for this worksheet, cannot generate download URL.',
+      404
+    );
   }
 
   const getObjectParams = {
@@ -388,21 +402,24 @@ exports.downloadWorksheet = asyncHandler(async (req, res) => {
   }
 
   const command = new GetObjectCommand(getObjectParams);
-  
+
   try {
     const signedUrl = await getSignedUrl(s3Client, command, {
       expiresIn: 3600, // URL expires in 1 hour
     });
 
-    // Return pre-signed URL
+    // Return pre-signed URL in the format the frontend expects
     res.json({
       success: true,
       data: {
-        downloadUrl: signedUrl
-      }
+        downloadUrl: signedUrl,
+      },
     });
-  } catch (error) {
-    console.error('Error generating pre-signed URL for B2:', error);
-    throw new APIError('Could not generate download link.', 500);
+  } catch (err) {
+    console.error('Error generating signed URL:', err);
+    throw new APIError(
+      'Could not generate download link. Please try again later.',
+      500
+    );
   }
 });

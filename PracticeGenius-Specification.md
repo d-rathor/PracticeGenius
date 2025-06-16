@@ -392,6 +392,14 @@ During the course of development and deployment, particularly when integrating t
 
 These fixes were crucial for establishing stable communication between the deployed frontend and backend services.
 
+## Release History
+
+### v1.2.0 (June 16, 2025) - Core Features Stable
+- **User Management**: Full CRUD operations for users, including admin management capabilities.
+- **Worksheet Management**: Comprehensive CRUD operations for worksheets, including file uploads to Backblaze B2 and secure downloads via pre-signed URLs.
+- **User Registration & Authentication**: Robust user registration, login, and JWT-based authentication system fully functional.
+- **Backend Stability**: Resolved critical backend errors, ensuring reliable API responses for core features.
+
 ## Recent Development Log & Key Fixes (June 15, 2025)
 
 Today's session focused on resolving critical production issues related to worksheet creation and ensuring a clean, stable codebase:
