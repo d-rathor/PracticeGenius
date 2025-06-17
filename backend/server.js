@@ -46,14 +46,8 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
-});
+const { errorHandler } = require('./src/middleware/error'); // Ensure this path is correct
+app.use(errorHandler);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
