@@ -329,10 +329,13 @@ exports.downloadWorksheet = asyncHandler(async (req, res) => {
     const userLevelIndex = subscriptionLevels.indexOf(userSubscriptionLevel);
 
     if (userLevelIndex < worksheetLevelIndex) {
+      console.log(`[DownloadWorksheet] About to throw 403 for user ${user._id} needing ${worksheet.subscriptionLevel}`);
       throw new APIError(
         `You need a ${worksheet.subscriptionLevel} subscription to download this worksheet`,
         403
       );
+      // The following log will likely not be reached if 'throw' works as expected
+      // console.log(`[DownloadWorksheet] Successfully THREW 403 for user ${user._id}`); 
     }
 
     // Check download limits
