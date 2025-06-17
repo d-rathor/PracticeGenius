@@ -195,16 +195,17 @@ const WorksheetDetailPage: React.FC = () => {
       console.log('[handleDownload] err.message (direct property on error object):', err.message);
       // --- END NEW LOGS ---
 
-      const errorMessage = err.data?.message || err.response?.data?.message /* Prefer err.data.message if available */ || err.message || 'Failed to initiate download.';
-      
-      if (err.response?.status === 403 || err.status === 403) { // Also check err.status directly as API client sets it
-        console.log('[handleDownload] Detected 403 error. Opening subscription modal.');
+      const apiMessage = err.data?.message || 'An error occurred.'; // Get message from our standardized error
+      const apiStatus = err.status; // Get status from our standardized error
+
+      if (apiStatus === 403) { 
+        console.log('[handleDownload] Detected 403 error using err.status. Opening subscription modal.');
+        // You can customize the message for the modal if needed, e.g. using apiMessage
         setIsSubscriptionModalOpen(true); 
-        // Future: Consider passing a specific message to the modal, e.g., setSubscriptionModalMessage(errorMessage);
       } else {
-        console.log(`[handleDownload] Error is not 403 (status from err.response: ${err.response?.status}, status from err.status: ${err.status}). Showing generic error message.`);
+        console.log(`[handleDownload] Error is not 403 (status from err.status: ${apiStatus}). Showing generic error message: ${apiMessage}`);
         console.error('Download error details in [id].tsx:', err); 
-        setDownloadError(errorMessage); 
+        setDownloadError(apiMessage); // Use the message from the API if available
       }
     } finally {
       setIsDownloading(false);
