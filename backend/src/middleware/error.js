@@ -7,6 +7,7 @@ const ApiError = require('../utils/ApiError');
  * Error handling middleware
  */
 const errorHandler = (err, req, res, next) => {
+  console.log('--- ERROR HANDLER INVOKED --- Original error name:', err.name, 'Message:', err.message);
   let error = { ...err }; // Clone
   error.message = err.message;
   error.statusCode = err.statusCode || 500;
