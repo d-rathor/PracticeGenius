@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import UserService, { User } from '@/services/user.service';
+import UserService from '@/services/user.service';
+import { User } from '@/types/types';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';

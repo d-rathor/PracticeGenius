@@ -1,6 +1,7 @@
 const Worksheet = require('../models/worksheet.model');
 const User = require('../models/user.model');
 const Subscription = require('../models/subscription.model');
+const UserWorksheetLog = require('../models/userWorksheetLog.model');
 const { APIError } = require('../middleware/error');
 const asyncHandler = require('../utils/async-handler');
 const path = require('path');
@@ -373,7 +374,24 @@ exports.downloadWorksheet = async (req, res, next) => {
     user.name = user.email.split('@')[0];
   }
 
-  // Track download
+  // Log unique worksheet download for the user's dashboard
+  try {
+    await UserWorksheetLog.create({
+      user: user._id,
+      worksheet: worksheet._id,
+    });
+    // If create is successful, it's the first time this user downloads this worksheet.
+    // If it fails due to unique constraint, it means they've downloaded it before, which is fine.
+  } catch (logError) {
+    if (logError.code === 11000) { // MongoDB duplicate key error code
+      // console.log(`User ${user._id} has already downloaded worksheet ${worksheet._id}. Log entry not duplicated.`);
+    } else {
+      // For other errors, log them but don't let it break the download flow
+      console.error('Error creating UserWorksheetLog entry:', logError);
+    }
+  }
+
+  // Track download (for daily limits, etc.)
   user.downloadHistory.push({
     worksheet: worksheet._id,
     downloadedAt: Date.now(),

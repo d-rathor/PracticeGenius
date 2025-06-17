@@ -6,7 +6,8 @@ const {
   updateUser, 
   deleteUser, 
   getUserDownloadHistory,
-  getRecentUsers
+  getRecentUsers,
+  getMyDownloadedWorksheets // Added for user's unique downloaded worksheets list
 } = require('../controllers/user.controller');
 const { auth, authorize } = require('../middleware/auth');
 
@@ -23,6 +24,13 @@ router.get('/', auth, authorize(['admin']), getAllUsers);
  * @access  Private/Admin
  */
 router.get('/recent', auth, authorize(['admin']), getRecentUsers);
+
+/**
+ * @route   GET /api/users/me/downloaded-worksheets
+ * @desc    Get logged-in user's uniquely downloaded worksheets
+ * @access  Private (Self)
+ */
+router.get('/me/downloaded-worksheets', auth, getMyDownloadedWorksheets);
 
 /**
  * @route   GET /api/users/:id

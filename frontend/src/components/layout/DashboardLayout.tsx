@@ -108,15 +108,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </Link>
 
                 <Link 
-                  href="/dashboard/worksheets" 
+                  href="/dashboard/my-downloads" 
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    isActivePath('/dashboard/worksheets') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    isActivePath('/dashboard/my-downloads') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  <svg className={`mr-3 h-5 w-5 ${isActivePath('/dashboard/worksheets') ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg className={`mr-3 h-5 w-5 ${isActivePath('/dashboard/my-downloads') ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  My Worksheets
+                  My Downloads
                 </Link>
 
                 <Link 
@@ -200,16 +200,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   </Link>
 
                   <Link 
-                    href="/dashboard/worksheets" 
+                    href="/dashboard/my-downloads" 
                     className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${
-                      isActivePath('/dashboard/worksheets') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      isActivePath('/dashboard/my-downloads') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     onClick={toggleSidebar}
                   >
-                    <svg className={`mr-4 h-6 w-6 ${isActivePath('/dashboard/worksheets') ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg className={`mr-4 h-6 w-6 ${isActivePath('/dashboard/my-downloads') ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    My Worksheets
+                    My Downloads
                   </Link>
 
                   <Link 

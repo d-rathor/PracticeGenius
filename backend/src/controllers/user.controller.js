@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
 const { APIError } = require('../middleware/error');
 const asyncHandler = require('../utils/async-handler');
+const UserWorksheetLog = require('../models/userWorksheetLog.model'); // Added for downloaded worksheets
 
 /**
  * @desc    Get all users with pagination
@@ -173,5 +174,27 @@ exports.getUserDownloadHistory = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: user.downloadHistory
+  });
+});
+
+/**
+ * @desc    Get logged-in user's uniquely downloaded worksheets
+ * @route   GET /api/users/me/downloaded-worksheets
+ * @access  Private (Self)
+ */
+exports.getMyDownloadedWorksheets = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+
+  const downloadedWorksheetsLogs = await UserWorksheetLog.find({ user: userId })
+    .populate({
+      path: 'worksheet',
+      select: 'title description subject grade subscriptionLevel thumbnailUrl fileKey createdAt _id',
+    })
+    .sort({ firstDownloadedAt: -1 }); // Show most recent first
+
+  res.json({
+    success: true,
+    count: downloadedWorksheetsLogs.length,
+    data: downloadedWorksheetsLogs,
   });
 });
