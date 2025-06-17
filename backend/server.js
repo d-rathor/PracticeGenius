@@ -47,6 +47,7 @@ app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
 const { errorHandler } = require('./src/middleware/error'); // Ensure this path is correct
+console.log('[Server.js] Type of imported errorHandler:', typeof errorHandler, errorHandler ? errorHandler.name : 'N/A'); // Log type and name
 app.use(errorHandler);
 
 // Connect to MongoDB
