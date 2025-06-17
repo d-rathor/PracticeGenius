@@ -16,9 +16,8 @@ WORKDIR /usr/src/app/backend
 # This will create /usr/src/app/backend/node_modules
 RUN npm install --production --no-optional
 
-# Copy the rest of the backend application source code
-# This copies the contents of your local 'backend/src' directory 
-# into '/usr/src/app/backend/src' in the image.
+# Copy the backend application's server.js and src directory
+COPY backend/server.js ./server.js 
 COPY backend/src ./src/
 
 # Expose the port the app runs on (ensure this matches your app's configuration)
@@ -28,5 +27,5 @@ EXPOSE 10000
 ENV NODE_ENV=production
 
 # Define the command to run your app
-# WORKDIR is /usr/src/app/backend, so server.js is at src/server.js
-CMD ["node", "src/server.js"]
+# WORKDIR is /usr/src/app/backend
+CMD ["node", "server.js"]
