@@ -297,7 +297,8 @@ exports.deleteWorksheet = asyncHandler(async (req, res) => {
  * @route   POST /api/worksheets/:id/download
  * @access  Private (with subscription check)
  */
-exports.downloadWorksheet = asyncHandler(async (req, res) => {
+exports.downloadWorksheet = async (req, res, next) => {
+  try {
   const worksheet = await Worksheet.findById(req.params.id);
 
   if (!worksheet) {
@@ -425,4 +426,16 @@ exports.downloadWorksheet = asyncHandler(async (req, res) => {
       500
     );
   }
-});
+  // This is the end of the inner try...catch for getSignedUrl
+  } catch (error) {
+    // This is the catch for the outer try block (started at line 301)
+    console.error('[DownloadWorksheet] Caught error in outer manual try...catch:', error.name, error.message);
+    // Log the full error object if it's an APIError to see its properties
+    if (error instanceof APIError) {
+        console.error('[DownloadWorksheet] APIError details:', JSON.stringify(error, null, 2));
+    } else {
+        console.error('[DownloadWorksheet] Non-APIError stack:', error.stack);
+    }
+    next(error); // Pass error to Express error handling middleware
+  }
+}; // This is the correct closing for the downloadWorksheet function
