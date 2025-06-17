@@ -395,10 +395,10 @@ const WorksheetDetailPage: React.FC = () => {
           </ModalHeader>
           <ModalBody>
             <p className="text-gray-600">
-              This worksheet is a premium resource. To download it, you need an active Premium subscription.
+              This worksheet has either exceeded free download limit or is a premium resource. To download it, you need an active Premium subscription.
             </p>
             <p className="text-gray-600 mt-2">
-              Upgrade your plan to get unlimited access to all our premium content.
+              Upgrade your plan to get unlimited access to all our free/premium content.
             </p>
           </ModalBody>
           <ModalFooter>
