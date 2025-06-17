@@ -7,47 +7,30 @@ const ApiError = require('../utils/ApiError');
  * Error handling middleware
  */
 const errorHandler = (err, req, res, next) => {
-  // Preserve original ApiError properties if no specific handler transforms it
-  let error = { ...err };
-  error.message = err.message; // Ensure message is copied from original err
+  let error = { ...err }; // Clone
+  error.message = err.message;
   error.statusCode = err.statusCode || 500;
   error.status = err.status || 'error';
-  
-  // Explicitly carry over isOperational if the original error had it
-  // This is important if the spread ({...err}) somehow loses it or it gets overwritten
-  // by a default 'undefined' if not present on a generic Error object.
   if (err.isOperational !== undefined) {
     error.isOperational = err.isOperational;
   }
 
-  // Log all errors in development for easier debugging
-  if (process.env.NODE_ENV === 'development') {
-    console.error('DEV ERROR \ud83d\udca5:', err);
-  }
-
-  // Mongoose Bad ObjectId
+  // Mongoose/JWT specific handlers (these re-assign 'error' with a new ApiError)
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     const message = `Resource not found with id of ${err.value}`;
     error = new ApiError(message, 404);
   }
-
-  // Mongoose Duplicate Key (e.g., unique email)
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     const value = err.keyValue[field];
     const message = `Duplicate field value entered: ${field} '${value}'. Please use another value.`;
     error = new ApiError(message, 400);
   }
-
-  // Mongoose Validation Error (THIS IS THE KEY FIX)
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map(val => val.message);
-    // If multiple validation errors, join them. Otherwise, use the first.
     const message = messages.length > 1 ? messages.join('. ') : messages[0];
     error = new ApiError(message, 400);
   }
-  
-  // JWT Errors
   if (err.name === 'JsonWebTokenError') {
     const message = 'Invalid token. Please log in again.';
     error = new ApiError(message, 401);
@@ -57,34 +40,28 @@ const errorHandler = (err, req, res, next) => {
     error = new ApiError(message, 401);
   }
 
+  // --- Logging for all environments to see what error object looks like before decision ---
+  console.log(`[ErrorHandler] Incoming error: name='${err.name}', message='${err.message}', code=${err.code}, statusCode=${err.statusCode}, isOperational=${err.isOperational}`);
+  console.log(`[ErrorHandler] Processed error object: name='${error.name}', message='${error.message}', statusCode=${error.statusCode}, status='${error.status}', isOperational=${error.isOperational}`);
 
-  // Final response logic
   if (process.env.NODE_ENV === 'development') {
+    console.error('DEV ERROR 💥:', err);
     return res.status(error.statusCode).json({
       success: false,
       status: error.status,
       message: error.message,
-      stack: err.stack, // Show original stack in dev
-      error: err // Show original error in dev
+      stack: err.stack,
+      error: err // Send full error in dev
     });
   }
 
   // Production error response
-  // --- BEGIN NEW LOG ---
-  if (process.env.NODE_ENV !== 'development') { // Only log this in non-dev (like production)
-    console.log('PROD ERROR HANDLER - Error object before isOperational check:', {
-      message: error.message,
-      statusCode: error.statusCode,
-      status: error.status,
-      isOperational: error.isOperational, // Check this value
-      name: error.name, 
-      originalName: err.name, // Also log original error's name
-      originalIsOperational: err.isOperational // And original isOperational
-    });
-  }
-  // --- END NEW LOG ---
-
   if (error.isOperational) {
+    console.log(`[ErrorHandler-Prod] Operational error. Attempting to send ${error.statusCode} with message: ${error.message}`);
+    if (res.headersSent) {
+      console.error('[ErrorHandler-Prod] Headers already sent! Cannot send operational error response.');
+      return next(error); // Pass to default Express handler if we can't send
+    }
     return res.status(error.statusCode).json({
       success: false,
       status: error.status,
@@ -92,8 +69,14 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // For non-operational errors not caught above, log and send generic message
-  console.error('UNHANDLED PROD ERROR \ud83d\udca5', err); // Log the original unhandled error
+  // If not operational, or if it's an unhandled case in production
+  console.error(`[ErrorHandler-Prod] Non-operational error or fallback. Original err: name='${err.name}', message='${err.message}'. Processed error: statusCode=${error.statusCode}, message='${error.message}'`);
+  console.error('UNHANDLED PROD ERROR DETAILS 💥', err); // Log the original error object for full details
+
+  if (res.headersSent) {
+    console.error('[ErrorHandler-Prod] Headers already sent! Cannot send generic 500 error response.');
+    return next(err); // Pass to default Express handler
+  }
   return res.status(500).json({
     success: false,
     status: 'error',
