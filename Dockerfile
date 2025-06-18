@@ -28,4 +28,4 @@ ENV NODE_ENV=production
 
 # Define the command to run your app
 # WORKDIR is /usr/src/app/backend
-CMD ["node", "server.js"]
+CMD ["node", "src/server.js"]
