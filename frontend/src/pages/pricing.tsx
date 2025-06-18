@@ -1,54 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-
-interface PricePlan {
-  essentialPrice: number;
-  premiumPrice: number;
-}
+import SubscriptionService, { SubscriptionPlan } from '@/services/subscription.service';
 
 const PricingPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [prices, setPrices] = useState<PricePlan>({
-    essentialPrice: 500,
-    premiumPrice: 1000
-  });
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
+
   useEffect(() => {
-    // Fetch pricing data from API
-    const fetchPrices = async () => {
+    const fetchSubscriptionPlans = async () => {
       try {
         setIsLoading(true);
-        // Determine if we're in development or production
-        const isDev = process.env.NODE_ENV === 'development';
-        
-        // Use direct URLs for both environments
-        const apiUrl = isDev 
-          ? 'http://localhost:8080/api/pricing' 
-          : 'https://practicegenius-api.onrender.com/api/pricing';
-        
-        console.log('Fetching pricing from:', apiUrl, 'Environment:', process.env.NODE_ENV);
-        
-        try {
-          const response = await fetch(apiUrl);
-          if (response.ok) {
-            const data = await response.json();
-            if (data && typeof data === 'object') {
-              setPrices({
-                essentialPrice: data.essentialPrice || 500,
-                premiumPrice: data.premiumPrice || 1000
-              });
-            }
-          }
-        } catch (err) {
-          console.error('Failed to fetch pricing:', err);
+        const plans = await SubscriptionService.getSubscriptionPlans();
+        if (plans && Array.isArray(plans)) {
+            // Sort plans: Free, Essential, Premium for consistent display
+            const sortedPlans = plans.sort((a: SubscriptionPlan, b: SubscriptionPlan) => {
+                const order: { [key: string]: number } = { 'Free': 1, 'Essential': 2, 'Premium': 3 };
+                return (order[a.name] || 99) - (order[b.name] || 99);
+            });
+            setSubscriptionPlans(sortedPlans);
+        } else {
+            console.error('Fetched plans are not in the expected format or are null:', plans);
+            setSubscriptionPlans([]); // Set to empty array if no data or unexpected format
         }
+      } catch (error) {
+        console.error('Failed to fetch subscription plans:', error);
+        setSubscriptionPlans([]); // Set to empty array on error
       } finally {
         setIsLoading(false);
       }
     };
-    
-    fetchPrices();
+
+    fetchSubscriptionPlans();
   }, []);
+
+  const getPlanSpecificClasses = (planName: SubscriptionPlan['name']) => {
+    if (planName === 'Essential') {
+      return 'border-t-4 border-orange-500 relative';
+    }
+    return '';
+  };
+
+  const getPopularBadge = (planName: SubscriptionPlan['name']) => {
+    if (planName === 'Essential') {
+      return (
+        <div className="absolute top-0 right-0 left-0 bg-orange-500 text-white text-center py-1 font-medium">
+          Most Popular
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <MainLayout>
@@ -64,260 +65,58 @@ const PricingPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {/* Free Plan */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="px-6 py-8">
-                <h3 className="text-2xl font-bold text-gray-900">Free</h3>
-                <div className="mt-4 flex items-baseline text-gray-900">
-                  <span className="text-5xl font-extrabold tracking-tight">₹0</span>
-                  <span className="ml-1 text-xl font-normal text-gray-500">/forever</span>
-                </div>
-                <p className="mt-5 text-lg text-gray-500">Basic access to limited worksheets</p>
-              </div>
-              <div className="px-6 pt-6 pb-8">
-                <h4 className="text-sm font-medium text-gray-900">What's included:</h4>
-                <ul className="mt-4 space-y-3">
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Access to 2 worksheets per grade and subject</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Preview all worksheets</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Basic support</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">No credit card required</p>
-                  </li>
-                </ul>
-                <h4 className="mt-8 text-sm font-medium text-gray-900">Limitations:</h4>
-                <ul className="mt-4 space-y-3">
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Limited worksheet access</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">No new worksheet updates</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Basic support only</p>
-                  </li>
-                </ul>
-                <div className="mt-8">
-                  <button
-                    className="w-full bg-white border border-orange-500 rounded-md py-2 text-sm font-semibold text-orange-500 hover:bg-orange-50"
-                  >
-                    Included
-                  </button>
-                </div>
-              </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
             </div>
-
-            {/* Essential Plan */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-orange-500 relative">
-              <div className="absolute top-0 right-0 left-0 bg-orange-500 text-white text-center py-1 font-medium">
-                Most Popular
-              </div>
-              <div className="px-6 py-8 mt-4">
-                <h3 className="text-2xl font-bold text-gray-900">Essential</h3>
-                <div className="mt-4 flex items-baseline text-gray-900">
-                  <span className="text-5xl font-extrabold tracking-tight">₹{prices.essentialPrice}</span>
-                  <span className="ml-1 text-xl font-normal text-gray-500">/per month</span>
+          ) : subscriptionPlans.length > 0 ? (
+            <div className="mt-12 grid gap-8 md:grid-cols-3">
+              {subscriptionPlans.map((plan) => (
+                <div 
+                  key={plan.id} 
+                  className={`bg-white rounded-lg shadow-lg overflow-hidden ${getPlanSpecificClasses(plan.name)}`}
+                >
+                  {getPopularBadge(plan.name)}
+                  <div className={`px-6 py-8 ${plan.name === 'Essential' ? 'mt-4' : ''}`}>
+                    <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
+                    <div className="mt-4 flex items-baseline text-gray-900">
+                      <span className="text-5xl font-extrabold tracking-tight">
+                        ₹{plan.price.monthly}
+                      </span>
+                      <span className="ml-1 text-xl font-normal text-gray-500">
+                        {plan.name === 'Free' ? '/forever' : '/per month'}
+                      </span>
+                    </div>
+                    <p className="mt-5 text-lg text-gray-500">{plan.description}</p>
+                  </div>
+                  <div className="px-6 pt-6 pb-8">
+                    <h4 className="text-sm font-medium text-gray-900">What's included:</h4>
+                    <ul className="mt-4 space-y-3">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <p className="ml-3 text-base text-gray-700">{feature}</p>
+                        </li>
+                      ))}
+                    </ul>
+                    {/* Buttons removed as per request */}
+                  </div>
                 </div>
-                <p className="mt-5 text-lg text-gray-500">Perfect for regular learning needs</p>
-              </div>
-              <div className="px-6 pt-6 pb-8">
-                <h4 className="text-sm font-medium text-gray-900">What's included:</h4>
-                <ul className="mt-4 space-y-3">
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Access to all Essential worksheets (Grades 1-5)</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Unlimited downloads</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Monthly new worksheets</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Email support</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">7-day free trial</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Cancel anytime</p>
-                  </li>
-                </ul>
-                <h4 className="mt-8 text-sm font-medium text-gray-900">Limitations:</h4>
-                <ul className="mt-4 space-y-3">
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">No access to Premium worksheets</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Standard support response time</p>
-                  </li>
-                </ul>
-                <div className="mt-8">
-                  <button
-                    className="w-full bg-orange-500 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-orange-600"
-                  >
-                    Included
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
-
-            {/* Premium Plan */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="px-6 py-8">
-                <h3 className="text-2xl font-bold text-gray-900">Premium</h3>
-                <div className="mt-4 flex items-baseline text-gray-900">
-                  <span className="text-5xl font-extrabold tracking-tight">₹{prices.premiumPrice}</span>
-                  <span className="ml-1 text-xl font-normal text-gray-500">/per month</span>
-                </div>
-                <p className="mt-5 text-lg text-gray-500">Complete access to all resources</p>
-              </div>
-              <div className="px-6 pt-6 pb-8">
-                <h4 className="text-sm font-medium text-gray-900">What's included:</h4>
-                <ul className="mt-4 space-y-3">
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Access to ALL worksheets (Grades 1-5)</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Unlimited downloads</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Priority access to new worksheets</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Premium support</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">7-day free trial</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">Cancel anytime</p>
-                  </li>
-                </ul>
-                <div className="mt-8">
-                  <button
-                    className="w-full bg-white border border-orange-500 rounded-md py-2 text-sm font-semibold text-orange-500 hover:bg-orange-50"
-                  >
-                    Current Plan
-                  </button>
-                </div>
-              </div>
+          ) : (
+            <div className="text-center mt-12">
+              <p className="text-xl text-gray-500">No subscription plans available at the moment. Please check back later.</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* FAQ Section */}
+      {/* FAQ Section (remains unchanged) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-extrabold text-gray-900">

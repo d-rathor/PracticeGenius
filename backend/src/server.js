@@ -147,6 +147,17 @@ console.log('Environment Variables:', {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Import all routes
+const routes = require('./routes');
+
+// Mount API routes before starting the server
+app.use((req, res, next) => {
+  console.log(`SERVER.JS: Incoming request to potential API path: ${req.method} ${req.originalUrl}`);
+  next();
+});
+app.use('/api', routes);
+console.log('All routes mounted successfully');
+
 // Log all requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`, {
@@ -186,12 +197,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Import all routes
-const routes = require('./routes');
 
-// Mount API routes before starting the server
-app.use('/api', routes);
-console.log('All routes mounted successfully');
 
 // Log all requests for debugging
 app.use((req, res, next) => {
@@ -199,13 +205,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Start server first, then try MongoDB connection
-const server = app.listen(PORT, '0.0.0.0', () => {
+const serverInstance = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
   console.log(`API available at http://localhost:${PORT}`);
   console.log(`Health check available at http://0.0.0.0:${PORT}/health`);
-  
-  // MongoDB connection is not required for health check
+
+  // Attempt MongoDB connection only if not skipped
   if (process.env.SKIP_MONGO !== 'true') {
     console.log('Attempting to connect to MongoDB Atlas...');
     mongoose.connect(MONGODB_URI)
@@ -215,10 +220,17 @@ const server = app.listen(PORT, '0.0.0.0', () => {
       .catch(err => {
         console.error('MongoDB connection error:', err);
         console.log('Running server without MongoDB connection. Some features may not work.');
+        // Note: Server is already running. This is just a DB connection failure.
       });
   } else {
-    console.log('Skipping MongoDB connection (SKIP_MONGO=true)');
+    console.log('Skipping MongoDB connection (SKIP_MONGO=true). Server is running.');
   }
+});
+
+// Handle server startup errors (e.g., port in use)
+serverInstance.on('error', (err) => {
+  console.error('Server startup error:', err);
+  process.exit(1); // Exit if server can't start
 });
 
 // Error handling middleware
@@ -230,12 +242,12 @@ process.on('SIGINT', () => {
   console.log('Received SIGINT. Shutting down gracefully...');
   mongoose.connection.close().then(() => {
     console.log('MongoDB connection closed.');
-    server.close(() => {
+    serverInstance.close(() => {
       console.log('HTTP server closed.');
       process.exit(0);
     });
   }).catch(() => {
-    server.close(() => {
+    serverInstance.close(() => {
       console.log('HTTP server closed.');
       process.exit(0);
     });

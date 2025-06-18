@@ -9,6 +9,13 @@ const {
 } = require('../controllers/subscription-plan.controller');
 const { auth, authorize } = require('../middleware/auth');
 
+console.log('ROUTES/SUBSCRIPTION-PLAN.ROUTES.JS: Subscription plan router file loaded');
+
+router.use((req, res, next) => {
+  console.log(`ROUTES/SUBSCRIPTION-PLAN.ROUTES.JS: Request received in subscription plan router: ${req.method} ${req.originalUrl}, BasePath: ${req.baseUrl}, Path: ${req.path}`);
+  next();
+});
+
 /**
  * @route   GET /api/subscription-plans
  * @desc    Get all subscription plans

@@ -101,7 +101,9 @@ const apiClient = {
     }
 
     // Construct the URL
-    const url = `${this.API_BASE_URL}${endpointPath}`;
+    const base = this.BACKEND_API_URL.endsWith('/') ? this.BACKEND_API_URL.slice(0, -1) : this.BACKEND_API_URL;
+    const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const url = `${base}/${path}`;
     console.log(`[api.ts] DEBUG: Making ${options.method || 'GET'} request to: ${url}`);
     
     let token = '';

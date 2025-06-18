@@ -8,6 +8,13 @@ const subscriptionPlanRoutes = require('./subscription-plan.routes');
 const settingsRoutes = require('./settings.routes');
 const healthRoutes = require('./health.routes');
 
+console.log('ROUTES/INDEX.JS: Main API router file loaded');
+
+router.use((req, res, next) => {
+  console.log(`ROUTES/INDEX.JS: Request received in main API router: ${req.method} ${req.originalUrl}, BasePath: ${req.baseUrl}, Path: ${req.path}`);
+  next();
+});
+
 // CORS middleware for API routes
 const apiCors = (req, res, next) => {
   const allowedOrigins = [
@@ -80,35 +87,6 @@ router.use((req, res) => {
   });
 });
 
-// Error handling middleware
-router.use((err, req, res, next) => {
-  console.error('API Error:', err);
-  
-  // Handle CORS error specifically
-  if (err.name === 'CorsError') {
-    return res.status(403).json({
-      success: false,
-      error: 'Not allowed by CORS',
-      details: {
-        origin: req.get('origin'),
-        method: req.method,
-        allowedOrigins: [
-          'https://practicegeniusv2.netlify.app',
-          'http://localhost:3000',
-          'https://practicegenius-api.onrender.com',
-          'http://localhost:3001',
-          'https://practicegenius.netlify.app'
-        ]
-      }
-    });
-  }
 
-  
-  res.status(500).json({
-    success: false,
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-  });
-});
 
 module.exports = router;

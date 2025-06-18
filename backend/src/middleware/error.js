@@ -7,7 +7,6 @@ const ApiError = require('../utils/ApiError');
  * Error handling middleware
  */
 const errorHandler = (err, req, res, next) => {
-  console.log('--- ERROR HANDLER INVOKED --- Original error name:', err.name, 'Message:', err.message);
   let error = { ...err }; // Clone
   error.message = err.message;
   error.statusCode = err.statusCode || 500;
@@ -40,11 +39,6 @@ const errorHandler = (err, req, res, next) => {
     const message = 'Your session has expired. Please log in again.';
     error = new ApiError(message, 401);
   }
-
-  // --- Logging for all environments to see what error object looks like before decision ---
-  console.log(`[ErrorHandler] Incoming error: name='${err.name}', message='${err.message}', code=${err.code}, statusCode=${err.statusCode}, isOperational=${err.isOperational}`);
-  console.log(`[ErrorHandler] Processed error object: name='${error.name}', message='${error.message}', statusCode=${error.statusCode}, status='${error.status}', isOperational=${error.isOperational}`);
-
   if (process.env.NODE_ENV === 'development') {
     console.error('DEV ERROR 💥:', err);
     return res.status(error.statusCode).json({
@@ -52,15 +46,13 @@ const errorHandler = (err, req, res, next) => {
       status: error.status,
       message: error.message,
       stack: err.stack,
-      error: err // Send full error in dev
+      errorDetails: { name: err.name, message: err.message, statusCode: err.statusCode } // Simplified
     });
   }
 
   // Production error response
   if (error.isOperational) {
-    console.log(`[ErrorHandler-Prod] Operational error. Attempting to send ${error.statusCode} with message: ${error.message}`);
     if (res.headersSent) {
-      console.error('[ErrorHandler-Prod] Headers already sent! Cannot send operational error response.');
       return next(error); // Pass to default Express handler if we can't send
     }
     return res.status(error.statusCode).json({
@@ -71,11 +63,9 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // If not operational, or if it's an unhandled case in production
-  console.error(`[ErrorHandler-Prod] Non-operational error or fallback. Original err: name='${err.name}', message='${err.message}'. Processed error: statusCode=${error.statusCode}, message='${error.message}'`);
   console.error('UNHANDLED PROD ERROR DETAILS 💥', err); // Log the original error object for full details
 
   if (res.headersSent) {
-    console.error('[ErrorHandler-Prod] Headers already sent! Cannot send generic 500 error response.');
     return next(err); // Pass to default Express handler
   }
   return res.status(500).json({

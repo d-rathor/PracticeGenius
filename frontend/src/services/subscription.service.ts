@@ -46,8 +46,13 @@ const SubscriptionService = {
    * Get all subscription plans
    * @returns Array of subscription plans
    */
-  async getSubscriptionPlans() {
-    return apiClient.get<SubscriptionPlan[]>('/api/subscription-plans');
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    const response = await apiClient.get<{ success: boolean, data: SubscriptionPlan[] }>('/api/subscription-plans');
+    if (response && response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    console.error('SubscriptionService: API response for plans was not in the expected format:', response);
+    return []; // Return empty array if data extraction fails
   },
   
   /**
