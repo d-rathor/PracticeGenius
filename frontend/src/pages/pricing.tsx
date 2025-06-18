@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import SubscriptionService, { SubscriptionPlan } from '@/services/subscription.service';
+import SubscriptionService from '@/services/subscription.service';
+import type { SubscriptionPlan } from '@/types';
 
 const PricingPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);

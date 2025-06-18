@@ -16,3 +16,20 @@ export interface User {
   createdAt?: string | null;
   // Add other user-specific fields as necessary
 }
+
+export interface SubscriptionPlan {
+  _id: string; // From MongoDB, used by services
+  id: string;  // Often a mapped version of _id or primary key, expected by context
+  name: string; // Kept as string for flexibility from admin page
+  description: string;
+  price: {
+    monthly: number;
+    yearly: number;
+  };
+  features: string[];
+  downloadLimit: number;
+  isActive: boolean;
+  currency?: string;         // From our admin page work, optional
+  stripePriceId?: string;    // From original types.ts version, optional
+  stripeProductId?: string;  // From original types.ts version, optional
+}

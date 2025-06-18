@@ -42,23 +42,13 @@ export interface WorksheetFilters {
 }
 
 // Subscription types
-export interface SubscriptionPlan {
-  id: string;
-  name: 'Free' | 'Essential' | 'Premium';
-  description: string;
-  price: {
-    monthly: number;
-    yearly: number;
-  };
-  features: string[];
-  downloadLimit: number;
-  isActive: boolean;
-}
+import type { SubscriptionPlan as SP } from './types'; // Import for local use
+export type { SubscriptionPlan } from './types'; // Re-export from types.ts
 
 export interface Subscription {
   id: string;
   user: string | User;
-  plan: string | SubscriptionPlan;
+  plan: string | SP;
   status: 'active' | 'canceled' | 'expired';
   startDate: string;
   endDate: string;
