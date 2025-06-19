@@ -49,7 +49,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <Link href="/admin" className="flex items-center ml-4 lg:ml-0">
+              <Link href="/admin/dashboard" className="flex items-center ml-4 lg:ml-0">
                 <div className="bg-orange-500 w-8 h-8 flex items-center justify-center mr-2 rounded-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
@@ -83,7 +83,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
               <nav className="flex-1 px-2 space-y-1 bg-white">
                 <Link 
-                  href="/admin" 
+                  href="/admin/dashboard" 
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                     isActivePath('/admin') && !isActivePath('/admin/users') && !isActivePath('/admin/worksheets') && !isActivePath('/admin/subscriptions') 
                     ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -183,7 +183,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </div>
                 <nav className="mt-5 px-2 space-y-1">
                   {/* Mobile navigation links - simplified */}
-                  <Link href="/admin" className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900" onClick={toggleSidebar}>
+                  <Link href="/admin/dashboard" className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900" onClick={toggleSidebar}>
                     Dashboard
                   </Link>
                   <Link href="/admin/users" className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900" onClick={toggleSidebar}>

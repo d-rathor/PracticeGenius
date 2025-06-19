@@ -41,7 +41,7 @@ const HowItWorks: React.FC<HowItWorksProps> = () => {
         {/* Call to Action Button */}
         <div className="text-center mt-12">
           <button 
-            onClick={() => router.push('/register')}
+            onClick={() => router.push('/auth/signup')}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300"
           >
             Get Started Today

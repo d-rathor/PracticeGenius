@@ -24,7 +24,7 @@ const Hero: React.FC<HeroProps> = () => {
             </p>
             <div className="flex flex-wrap gap-4 mb-8">
               <Link 
-                href="/register" 
+                href="/auth/signup" 
                 className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded transition duration-300"
               >
                 Get Started Now

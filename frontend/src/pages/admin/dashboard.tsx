@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import AdminService from '@/services/admin.service';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import Link from 'next/link';
@@ -8,26 +9,16 @@ const AdminDashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
-    activeSubscriptions: 0,
     totalWorksheets: 0,
-    recentSignups: 0
   });
 
   useEffect(() => {
     // Fetch admin dashboard data
     const fetchDashboardData = async () => {
       try {
-        // In a real app, this would be an API call
-        // For now, we'll use mock data
-        setTimeout(() => {
-          setStats({
-            totalUsers: 156,
-            activeSubscriptions: 98,
-            totalWorksheets: 450,
-            recentSignups: 12
-          });
-          setIsLoading(false);
-        }, 1000);
+        const data = await AdminService.getStats();
+        setStats(data);
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setIsLoading(false);
@@ -48,7 +39,7 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card>
                 <CardHeader>
                   <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
@@ -58,14 +49,7 @@ const AdminDashboardPage: React.FC = () => {
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader>
-                  <h2 className="text-lg font-semibold text-gray-700">Active Subscriptions</h2>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-orange-600">{stats.activeSubscriptions}</div>
-                </CardContent>
-              </Card>
+              
               
               <Card>
                 <CardHeader>
@@ -76,14 +60,7 @@ const AdminDashboardPage: React.FC = () => {
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader>
-                  <h2 className="text-lg font-semibold text-gray-700">Recent Signups</h2>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-orange-600">{stats.recentSignups}</div>
-                </CardContent>
-              </Card>
+              
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

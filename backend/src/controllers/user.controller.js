@@ -142,7 +142,7 @@ exports.deleteUser = asyncHandler(async (req, res) => {
     }
   }
   
-  await user.remove();
+  await User.findByIdAndDelete(req.params.id);
   
   res.json({
     success: true,

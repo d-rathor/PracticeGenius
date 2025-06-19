@@ -48,7 +48,7 @@ const Pricing: React.FC<PricingProps> = () => {
                 </li>
               </ul>
               <Link 
-                href="/register" 
+                href="/auth/signup" 
                 className="block w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-center rounded transition duration-300"
               >
                 Get Started
@@ -95,7 +95,7 @@ const Pricing: React.FC<PricingProps> = () => {
                 </li>
               </ul>
               <Link 
-                href="/register" 
+                href="/auth/signup" 
                 className="block w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white text-center rounded transition duration-300"
               >
                 Subscribe Now
@@ -139,7 +139,7 @@ const Pricing: React.FC<PricingProps> = () => {
                 </li>
               </ul>
               <Link 
-                href="/register" 
+                href="/auth/signup" 
                 className="block w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-center rounded transition duration-300"
               >
                 Subscribe Now

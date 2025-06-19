@@ -3,6 +3,7 @@ const router = express.Router();
 const authRoutes = require('./auth.routes');
 const userRoutes = require('./user.routes');
 const worksheetRoutes = require('./worksheet.routes');
+const adminRoutes = require('./admin.routes');
 const subscriptionRoutes = require('./subscription.routes');
 const subscriptionPlanRoutes = require('./subscription-plan.routes');
 const settingsRoutes = require('./settings.routes');
@@ -74,6 +75,7 @@ router.get('/', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/worksheets', worksheetRoutes);
+router.use('/admin', adminRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/subscription-plans', subscriptionPlanRoutes);
 router.use('/settings', settingsRoutes);

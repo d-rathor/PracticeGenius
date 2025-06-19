@@ -42,9 +42,19 @@ const getUsers = async (): Promise<User[]> => {
   }
 };
 
+const deleteUser = async (userId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/api/users/${userId}`);
+  } catch (error) {
+    console.error(`Error deleting user ${userId} in UserService:`, error);
+    throw error;
+  }
+};
+
 const UserService = {
   getMyDownloadedWorksheets,
   getUsers,
+  deleteUser,
 };
 
 export default UserService;
