@@ -20,18 +20,18 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // === START INTENSIVE CORS DEBUGGING ===
-    console.log(`[CORS DEBUG] Received request from origin: ${origin}`);
-    console.log(`[CORS DEBUG] Server allowedOrigins list: ${JSON.stringify(allowedOrigins)}`);
+    // Log the incoming origin for debugging
 
+
+    // Allow requests with no origin (like mobile apps or curl requests in some cases)
+    // or if the origin is in our allowed list.
     if (!origin || allowedOrigins.includes(origin)) {
-      console.log(`[CORS DEBUG] SUCCESS: Origin '${origin}' is in the allowed list or is not present. Granting access.`);
+
       callback(null, true);
     } else {
-      console.error(`[CORS DEBUG] FAILURE: Origin '${origin}' is NOT in the allowed list. Denying access.`);
+      console.error('CORS Error: Origin not allowed:', origin);
       callback(new Error('Not allowed by CORS: Origin ' + origin + ' is not in the allowed list.'));
     }
-    // === END INTENSIVE CORS DEBUGGING ===
   },
   credentials: true, // Allows cookies to be sent and received
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
