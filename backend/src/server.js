@@ -11,8 +11,10 @@ const app = express();
 
 // CORS Configuration using the 'cors' package
 const allowedOrigins = [
-  'https://practicegeniusv2.netlify.app', // Primary frontend
-  'http://localhost:3000',             // Local frontend development for testing
+  'https://practicegeniusv2.netlify.app', // Old Netlify frontend
+  'https://practicegenius.online',        // New primary custom domain
+  'https://www.practicegenius.online',    // New www custom domain
+  'http://localhost:3000',                // Local frontend development for testing
   // Add any other specific origins that need access
 ];
 
