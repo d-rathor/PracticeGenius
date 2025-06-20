@@ -1,18 +1,19 @@
 const express = require('express');
-const router = express.Router();
-const authRoutes = require('./auth.routes');
-const userRoutes = require('./user.routes');
-const worksheetRoutes = require('./worksheet.routes');
-const adminRoutes = require('./admin.routes');
-const subscriptionRoutes = require('./subscription.routes');
-const subscriptionPlanRoutes = require('./subscription-plan.routes');
-const settingsRoutes = require('./settings.routes');
-const healthRoutes = require('./health.routes');
+const authRoutes = require('./auth.routes.js');
+const userRoutes = require('./user.routes.js');
+const worksheetRoutes = require('./worksheet.routes.js');
+const adminRoutes = require('./admin.routes.js');
+const subscriptionRoutes = require('./subscription.routes.js');
+const subscriptionPlanRoutes = require('./subscription-plan.routes.js');
+const settingsRoutes = require('./settings.routes.js');
+const healthRoutes = require('./health.routes.js');
 
-console.log('ROUTES/INDEX.JS: Main API router file loaded');
+const router = express.Router();
+
+
 
 router.use((req, res, next) => {
-  console.log(`ROUTES/INDEX.JS: Request received in main API router: ${req.method} ${req.originalUrl}, BasePath: ${req.baseUrl}, Path: ${req.path}`);
+
   next();
 });
 
@@ -88,7 +89,5 @@ router.use((req, res) => {
     path: req.originalUrl
   });
 });
-
-
 
 module.exports = router;

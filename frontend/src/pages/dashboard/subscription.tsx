@@ -1,103 +1,83 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import Link from 'next/link';
+import SubscriptionService, { Subscription } from '@/services/subscription.service';
+import { SubscriptionPlan } from '@/types/types';
 
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: number;
-  interval: string;
-  features: string[];
-  isPopular?: boolean;
-}
-
-interface UserSubscription {
-  id: string;
-  planId: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-  autoRenew: boolean;
-  paymentMethod: string;
-}
+const currencySymbols: { [key: string]: string } = {
+  USD: '$',
+  INR: '₹',
+  // Add other currencies as needed
+};
 
 const SubscriptionPage: React.FC = () => {
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSwitching, setIsSwitching] = useState<string | null>(null); // Store planId being switched to
 
-  useEffect(() => {
-    // Simulate API call to fetch data
-    setTimeout(() => {
-      // Mock data - in a real app, this would come from an API
-      setPlans([
-        {
-          id: 'basic',
-          name: 'Basic',
-          price: 4.99,
-          interval: 'month',
-          features: [
-            'Access to 50 worksheets',
-            '10 downloads per month',
-            'Basic worksheet customization'
-          ]
-        },
-        {
-          id: 'premium',
-          name: 'Premium',
-          price: 9.99,
-          interval: 'month',
-          features: [
-            'Access to 200 worksheets',
-            '50 downloads per month',
-            'Advanced worksheet customization',
-            'Priority support'
-          ],
-          isPopular: true
-        },
-        {
-          id: 'pro',
-          name: 'Professional',
-          price: 19.99,
-          interval: 'month',
-          features: [
-            'Unlimited access to all worksheets',
-            'Unlimited downloads',
-            'Full worksheet customization',
-            'Priority support',
-            'Bulk download options'
-          ]
-        }
+  const fetchSubscriptionData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [plansResponse, subscriptionResponse] = await Promise.all([
+        SubscriptionService.getSubscriptionPlans(),
+        SubscriptionService.getCurrentSubscription(),
       ]);
 
-      setSubscription({
-        id: 'sub_123456',
-        planId: 'premium',
-        status: 'active',
-        startDate: '2025-05-01',
-        endDate: '2025-07-01',
-        autoRenew: true,
-        paymentMethod: 'Visa ending in 4242'
-      });
+      setAllPlans(plansResponse || []);
 
+      const actualSubscriptionData = subscriptionResponse?.success ? subscriptionResponse.data : null;
+      setCurrentSubscription(actualSubscriptionData);
+
+    } catch (error) {
+      console.error('Error fetching subscription data:', error);
+      setCurrentSubscription(null); // Ensure state is null on error
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   }, []);
 
-  const getCurrentPlan = () => {
-    if (!subscription) return null;
-    return plans.find(plan => plan.id === subscription.planId);
-  };
+  useEffect(() => {
+    fetchSubscriptionData();
+  }, [fetchSubscriptionData]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+
+
+  const handleSwitchPlan = async (planId: string) => {
+    if (!window.confirm('Are you sure you want to switch your subscription plan?')) {
+      return;
+    }
+
+    const selectedPlan = allPlans.find((p) => p._id === planId);
+    if (!selectedPlan) {
+      console.error('Selected plan not found!');
+      alert('An error occurred. Please try refreshing the page.');
+      return;
+    }
+
+    setIsSwitching(planId);
+    try {
+      const response = await SubscriptionService.createSubscription({
+        planId,
+        amount: selectedPlan.price.monthly,
+        paymentMethod: 'card', // Placeholder
+        billingCycle: 'monthly',
+        autoRenew: true,
+      });
+
+      if (response && response.success) {
+        alert('Plan switched successfully!');
+        setCurrentSubscription(response.data); // Use the returned subscription data to update the UI
+      } else {
+        throw new Error(response.message || 'Failed to switch plan');
+      }
+    } catch (error) {
+      console.error('Error switching subscription plan:', error);
+      alert('Failed to switch subscription plan. Please try again.');
+    } finally {
+      setIsSwitching(null);
+    }
   };
 
   return (
@@ -112,61 +92,54 @@ const SubscriptionPage: React.FC = () => {
         ) : (
           <>
             {/* Current Subscription */}
-            <Card className="mb-6">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Current Subscription</h2>
-                  <Badge variant={subscription?.status === 'active' ? 'success' : 'warning'}>
-                    {subscription?.status === 'active' ? 'Active' : 'Inactive'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Plan</p>
-                    <p className="font-medium">{getCurrentPlan()?.name}</p>
+            {currentSubscription && currentSubscription.plan ? (
+              <Card className="mb-6">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">Current Subscription</h2>
+                    <Badge variant={currentSubscription.status === 'active' ? 'success' : 'warning'}>
+                      {currentSubscription.status.charAt(0).toUpperCase() + currentSubscription.status.slice(1)}
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Price</p>
-                    <p className="font-medium">${getCurrentPlan()?.price} / {getCurrentPlan()?.interval}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Plan</p>
+                      <p className="font-medium">{currentSubscription.plan.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Price</p>
+                      <p className="font-medium">{currencySymbols[currentSubscription.plan.currency || 'USD'] || '$'}{currentSubscription.plan.price.monthly} / month</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Start Date</p>
+                      <p className="font-medium">{new Date(currentSubscription.startDate).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">End Date</p>
+                      <p className="font-medium">{new Date(currentSubscription.endDate).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Start Date</p>
-                    <p className="font-medium">{formatDate(subscription?.startDate || '')}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Renewal Date</p>
-                    <p className="font-medium">{formatDate(subscription?.endDate || '')}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Auto-Renew</p>
-                    <p className="font-medium">{subscription?.autoRenew ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Payment Method</p>
-                    <p className="font-medium">{subscription?.paymentMethod}</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <div className="flex space-x-4">
-                  <button className="text-orange-500 hover:text-orange-600 text-sm font-medium">
-                    Update Payment Method
-                  </button>
-                  <button className="text-orange-500 hover:text-orange-600 text-sm font-medium">
-                    {subscription?.autoRenew ? 'Cancel Auto-Renew' : 'Enable Auto-Renew'}
-                  </button>
-                </div>
-              </CardFooter>
-            </Card>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="mb-6">
+                <CardHeader>
+                   <h2 className="text-xl font-semibold">No Active Subscription</h2>
+                </CardHeader>
+                <CardContent>
+                  <p>You do not have an active subscription. Please choose a plan below.</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Available Plans */}
             <h2 className="text-xl font-semibold mt-8 mb-4">Available Plans</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {plans.map((plan) => (
-                <Card key={plan.id} className={`relative ${plan.isPopular ? 'border-2 border-orange-500' : ''}`}>
-                  {plan.isPopular && (
+              {allPlans.map((plan) => (
+                <Card key={plan._id} className={`relative ${plan.name === 'Premium' ? 'border-2 border-orange-500' : ''}`}>
+                  {plan.name === 'Premium' && (
                     <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 text-xs font-semibold rounded-bl">
                       Popular
                     </div>
@@ -174,15 +147,15 @@ const SubscriptionPage: React.FC = () => {
                   <CardHeader>
                     <h3 className="text-lg font-semibold">{plan.name}</h3>
                     <div className="mt-2">
-                      <span className="text-2xl font-bold">${plan.price}</span>
-                      <span className="text-gray-500">/{plan.interval}</span>
+                      <span className="text-2xl font-bold">{currencySymbols[plan.currency || 'USD'] || '$'}{plan.price.monthly}</span>
+                      <span className="text-gray-500">/month</span>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-start">
-                          <svg className="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                           <span>{feature}</span>
@@ -192,78 +165,24 @@ const SubscriptionPage: React.FC = () => {
                   </CardContent>
                   <CardFooter>
                     <button 
-                      className={`w-full py-2 px-4 rounded text-center font-medium ${
-                        plan.id === subscription?.planId
+                      onClick={() => handleSwitchPlan(plan._id)}
+                      className={`w-full py-2 px-4 rounded text-center font-medium transition duration-300 ${
+                        plan._id === currentSubscription?.plan?._id
                           ? 'bg-gray-200 text-gray-800 cursor-not-allowed'
-                          : 'bg-orange-500 hover:bg-orange-600 text-white transition duration-300'
+                          : 'bg-orange-500 hover:bg-orange-600 text-white'
                       }`}
-                      disabled={plan.id === subscription?.planId}
+                      disabled={plan._id === currentSubscription?.plan?._id || isSwitching !== null}
                     >
-                      {plan.id === subscription?.planId ? 'Current Plan' : 'Switch Plan'}
+                      {isSwitching === plan._id 
+                        ? 'Switching...'
+                        : plan._id === currentSubscription?.plan?._id 
+                          ? 'Current Plan' 
+                          : 'Switch Plan'}
                     </button>
                   </CardFooter>
                 </Card>
               ))}
             </div>
-
-            {/* Billing History */}
-            <Card className="mt-8">
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Billing History</h2>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Description
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      <tr>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          May 1, 2025
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          Premium Plan Subscription
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          $9.99
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="success">Paid</Badge>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          April 1, 2025
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          Premium Plan Subscription
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          $9.99
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="success">Paid</Badge>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
           </>
         )}
       </div>

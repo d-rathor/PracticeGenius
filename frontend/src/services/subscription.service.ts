@@ -1,5 +1,5 @@
 import apiClient from '@/lib/api';
-import { SubscriptionPlan } from '@/types/types'; // Import canonical type
+import { ApiResponse, SubscriptionPlan } from '@/types/types'; // Import canonical type
 
 // Local Subscription interface (if different from a global one, otherwise import too)
 export interface Subscription {
@@ -24,6 +24,7 @@ export interface CreateSubscriptionData {
   paymentId?: string;
   billingCycle: 'monthly' | 'yearly';
   autoRenew: boolean;
+  amount: number;
 }
 
 /**
@@ -66,8 +67,8 @@ const SubscriptionService = {
    * Get current user's active subscription
    * @returns User's active subscription or null
    */
-  async getCurrentSubscription() {
-    return apiClient.get<Subscription | null>('/api/subscriptions/current');
+  async getCurrentSubscription(): Promise<ApiResponse<Subscription | null>> {
+    return apiClient.get<ApiResponse<Subscription | null>>('/api/subscriptions/current');
   },
   
   /**
@@ -75,8 +76,8 @@ const SubscriptionService = {
    * @param subscriptionData Subscription data
    * @returns Created subscription
    */
-  async createSubscription(subscriptionData: CreateSubscriptionData) {
-    return apiClient.post<Subscription>('/api/subscriptions', subscriptionData);
+  async createSubscription(subscriptionData: CreateSubscriptionData): Promise<ApiResponse<Subscription>> {
+    return apiClient.post<ApiResponse<Subscription>>('/api/subscriptions', subscriptionData);
   },
   
   /**

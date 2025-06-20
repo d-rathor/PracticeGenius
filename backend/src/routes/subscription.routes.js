@@ -1,6 +1,5 @@
 const express = require('express');
-const router = express.Router();
-const { 
+const {
   getAllSubscriptions,
   getCurrentSubscription,
   getSubscriptionById,
@@ -9,71 +8,29 @@ const {
   cancelSubscription,
   renewSubscription,
   getRecentSubscriptions,
-  getAllSubscriptionPlans // Import the new controller function
-} = require('../controllers/subscription.controller');
-const { auth, authorize } = require('../middleware/auth');
+  getAllSubscriptionPlans,
+  deleteSubscription
+} = require('../controllers/subscription.controller.js');
+const { auth, authorize } = require('../middleware/auth.js');
 
-/**
- * @route   GET /api/subscriptions
- * @desc    Get all subscriptions with pagination
- * @access  Private/Admin
- */
-router.get('/', auth, authorize(['admin']), getAllSubscriptions);
+const router = express.Router();
 
-/**
- * @route   GET /api/subscriptions/current
- * @desc    Get current user's subscription
- * @access  Private
- */
+router
+  .route('/')
+  .get(auth, authorize(['admin']), getAllSubscriptions)
+  .post(auth, createSubscription);
+
 router.get('/current', auth, getCurrentSubscription);
-
-/**
- * @route   GET /api/subscriptions/recent
- * @desc    Get recent subscriptions
- * @access  Private/Admin
- */
 router.get('/recent', auth, authorize(['admin']), getRecentSubscriptions);
+router.get('/plans', auth, getAllSubscriptionPlans);
 
-/**
- * @route   GET /api/subscriptions/plans
- * @desc    Get all available subscription plans
- * @access  Private/Admin (or Public if plans are generally viewable - for now, admin only)
- */
-router.get('/plans', auth, authorize(['admin']), getAllSubscriptionPlans);
+router
+  .route('/:id')
+  .get(auth, getSubscriptionById)
+  .put(auth, authorize(['admin']), updateSubscription)
+  .delete(auth, authorize(['admin']), deleteSubscription);
 
-/**
- * @route   POST /api/subscriptions
- * @desc    Create a new subscription
- * @access  Private
- */
-router.post('/', auth, createSubscription);
-
-/**
- * @route   GET /api/subscriptions/:id
- * @desc    Get subscription by ID
- * @access  Private/Admin or Subscription Owner
- */
-router.get('/:id', auth, getSubscriptionById);
-
-/**
- * @route   PUT /api/subscriptions/:id
- * @desc    Update subscription
- * @access  Private/Admin
- */
-router.put('/:id', auth, authorize(['admin']), updateSubscription);
-
-/**
- * @route   PUT /api/subscriptions/:id/cancel
- * @desc    Cancel subscription
- * @access  Private/Admin or Subscription Owner
- */
 router.put('/:id/cancel', auth, cancelSubscription);
-
-/**
- * @route   PUT /api/subscriptions/:id/renew
- * @desc    Renew subscription
- * @access  Private/Admin or Subscription Owner
- */
 router.put('/:id/renew', auth, renewSubscription);
 
 module.exports = router;

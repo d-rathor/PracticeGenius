@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import apiClient from '@/lib/api'; // Import apiClient
+import AuthService from '@/services/auth.service';
 
 interface LoginResponse {
   token: string;
@@ -34,77 +35,28 @@ const LoginPage: React.FC = () => {
     
     setIsLoading(true);
     
-    try {
-      console.log('Attempting login with:', { email });
-      
-      // Use apiClient for the login request
-      console.log(`Sending login request to: ${apiClient.API_BASE_URL}/api/auth/login`);
-      const data = await apiClient.post<LoginResponse>('/api/auth/login', { email, password });
-      // apiClient.post already returns the JSON data and handles response status checking internally
-      // If an error occurs (non-2xx response), apiClient.post will throw an error which is caught below.
-      console.log('Login response data:', data);
-      
-      // Store token in localStorage
-      console.log('About to store token:', data && data.token ? 'Token exists' : 'No token in response');
-      localStorage.setItem('practicegenius_token', data.token);
-      console.log('Token stored in localStorage');
-      
+    // The try/catch is removed because AuthService now handles errors gracefully.
+    const response = await AuthService.login({ email, password });
+
+    if (response.success && response.token && response.user) {
       // Store user info in localStorage
-      if (data.user) {
-        console.log('User data received:', data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        console.log('User info stored in localStorage:', data.user);
-      } else {
-        console.error('No user data in response');
-      }
-      
-      // Verify localStorage after setting
-      const storedToken = localStorage.getItem('practicegenius_token');
-      const storedUser = localStorage.getItem('user');
-      console.log('Verification - Token in localStorage:', storedToken ? 'Token exists' : 'No token');
-      console.log('Verification - User in localStorage:', storedUser ? 'User exists' : 'No user');
-      
+      localStorage.setItem('user', JSON.stringify(response.user));
+
       // Determine redirect path based on user role
-      const userObj = data.user || (storedUser ? JSON.parse(storedUser) : null);
-      const redirectPath = userObj?.role === 'admin' 
+      const redirectPath = response.user.role === 'admin' 
         ? '/admin/dashboard' 
         : redirect ? decodeURIComponent(redirect as string) : '/dashboard';
       
-      console.log('User role:', userObj?.role);
-      console.log('Redirecting to:', redirectPath);
-      
-      // Add a small delay to ensure localStorage is updated
-      setTimeout(() => {
-        // Force a complete page reload to ensure token is picked up
-        console.log('About to redirect to:', redirectPath);
-        
-        // Use window.location.assign for a cleaner navigation approach
-        // This creates a new navigation entry in the browser history
-        window.location.assign(redirectPath);
-        
-        // Fallback redirect in case the first one doesn't work
-        setTimeout(() => {
-          if (window.location.pathname.includes('/auth/login')) {
-            console.log('Fallback redirect triggered');
-            window.location.href = redirectPath;
-          }
-        }, 1000);
-      }, 500);
-      
-    } catch (err) {
-      console.error('Login error:', err);
-      
-      // Provide more user-friendly error messages
-      if (err instanceof TypeError && err.message.includes('fetch')) {
-        setError('Unable to connect to the server. Please check your internet connection and try again.');
-      } else if (err instanceof SyntaxError) {
-        setError('The server response was invalid. Please try again later.');
-      } else {
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again later.');
-      }
-    } finally {
-      setIsLoading(false);
+      // Use window.location.assign for a cleaner navigation that ensures a full page reload,
+      // which helps in picking up the new auth state.
+      window.location.assign(redirectPath);
+
+    } else {
+      // Set error message from the standardized API response
+      setError(response.message || 'Login failed. Please check your credentials.');
     }
+
+    setIsLoading(false);
   };
 
   return (

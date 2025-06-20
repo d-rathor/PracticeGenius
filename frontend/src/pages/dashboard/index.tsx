@@ -17,10 +17,9 @@ const DashboardPage: React.FC = () => {
 
     const fetchSubscription = async () => {
       try {
-        const subscriptionData = await SubscriptionService.getCurrentSubscription();
-        if (subscriptionData) {
-          setSubscription(subscriptionData);
-        }
+        const subscriptionApiResponse = await SubscriptionService.getCurrentSubscription();
+        const actualSubscription = subscriptionApiResponse?.success ? subscriptionApiResponse.data : null;
+        setSubscription(actualSubscription);
       } catch (error) {
         console.error('Failed to fetch subscription:', error);
       } finally {

@@ -6,8 +6,8 @@ const {
   createSubscriptionPlan,
   updateSubscriptionPlan,
   deleteSubscriptionPlan
-} = require('../controllers/subscription-plan.controller');
-const { auth, authorize } = require('../middleware/auth');
+} = require('../controllers/subscription-plan.controller.js');
+const { auth, authorize } = require('../middleware/auth.js');
 
 console.log('ROUTES/SUBSCRIPTION-PLAN.ROUTES.JS: Subscription plan router file loaded');
 

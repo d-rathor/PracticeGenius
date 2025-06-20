@@ -19,13 +19,12 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     // Log the incoming origin for debugging
-    console.log('CORS check: Request origin:', origin);
-    console.log('CORS check: Allowed origins:', allowedOrigins);
+
 
     // Allow requests with no origin (like mobile apps or curl requests in some cases)
     // or if the origin is in our allowed list.
     if (!origin || allowedOrigins.includes(origin)) {
-      console.log('CORS check: Origin allowed.');
+
       callback(null, true);
     } else {
       console.error('CORS Error: Origin not allowed:', origin);
@@ -152,7 +151,7 @@ const routes = require('./routes');
 
 // Mount API routes before starting the server
 app.use((req, res, next) => {
-  console.log(`SERVER.JS: Incoming request to potential API path: ${req.method} ${req.originalUrl}`);
+
   next();
 });
 app.use('/api', routes);
