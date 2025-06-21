@@ -38,6 +38,12 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
+// Add Vary: Origin header to all responses to help with caching
+app.use(function(req, res, next) {
+  res.setHeader('Vary', 'Origin');
+  next();
+});
+
 // Standard middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
