@@ -29,6 +29,11 @@ app.use((req, res, next) => {
   // Crucial for telling caches to vary response by Origin
   res.setHeader('Vary', 'Origin');
 
+  // Add Cache-Control: private as suggested by Render support
+  res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
 
 
   // Set other CORS headers
