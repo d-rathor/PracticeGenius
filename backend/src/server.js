@@ -19,8 +19,20 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  // TEMPORARY DEBUGGING: Allow all origins to test for caching issues.
-  origin: '*',
+  origin: function (origin, callback) {
+    // Log the incoming origin for debugging
+
+
+    // Allow requests with no origin (like mobile apps or curl requests in some cases)
+    // or if the origin is in our allowed list.
+    if (!origin || allowedOrigins.includes(origin)) {
+
+      callback(null, true);
+    } else {
+      console.error('CORS Error: Origin not allowed:', origin);
+      callback(new Error('Not allowed by CORS: Origin ' + origin + ' is not in the allowed list.'));
+    }
+  },
   credentials: true, // Allows cookies to be sent and received
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-auth-token', 'Origin', 'Accept', 'X-Forwarded-For'],
