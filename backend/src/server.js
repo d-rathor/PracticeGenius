@@ -18,29 +18,28 @@ const allowedOrigins = [
   'http://localhost:3001',                // Local frontend development (alternative port)
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    // or if the origin is in our allowed list.
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.error(`CORS Error: Origin not allowed: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-auth-token', 'Origin', 'Accept', 'X-Forwarded-For'],
-  exposedHeaders: ['x-auth-token'],
-};
+// Manual CORS Middleware to combat aggressive caching
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // Dynamically set the Access-Control-Allow-Origin header
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Add Vary: Origin header to all responses to help with caching
-app.use(function(req, res, next) {
+  // Crucial for telling caches to vary response by Origin
   res.setHeader('Vary', 'Origin');
+
+  // Set other CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-auth-token, Origin, Accept, X-Forwarded-For');
+  res.setHeader('Access-Control-Expose-Headers', 'x-auth-token');
+
+  // End preflight requests here
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
   next();
 });
 
