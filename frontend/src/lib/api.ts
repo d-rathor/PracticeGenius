@@ -49,8 +49,7 @@ async function request<T>(
     headers['x-auth-token'] = token;
   }
   
-  // Add a custom header for server-side logging/identification
-  headers['x-forwarded-for'] = 'frontend';
+
 
   console.log('[api.ts] Request Headers before fetch: ', headers);
 
@@ -226,9 +225,7 @@ const apiClient = {
 
     const requestHeaders = new Headers(options.headers);
 
-    if (!this.isDevelopmentCheck) {
-      requestHeaders.set('X-Forwarded-For', 'frontend');
-    }
+
 
     if (token) {
       requestHeaders.set('Authorization', `Bearer ${token}`);
