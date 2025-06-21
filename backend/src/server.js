@@ -44,6 +44,19 @@ const corsOptions = {
 // Apply CORS middleware globally. The `cors` package handles preflight (OPTIONS) requests automatically.
 app.use(cors(corsOptions));
 
+// --- FINAL DIAGNOSTIC MIDDLEWARE ---
+// This middleware logs the exact CORS header our application is setting.
+// This is to create irrefutable proof for Render Support that their platform is overwriting the header.
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  if (origin && allowedOrigins.includes(origin)) {
+    // This log will appear in your Render backend logs.
+    console.log(`[FINAL DIAGNOSTIC] Our app is setting Access-Control-Allow-Origin to: ${origin}`);
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  next();
+});
+
 // Forcing OPTIONS route handling can sometimes be useful for complex setups, but usually not needed with `cors` package.
 // If issues persist, you might uncomment this, but it's generally handled by app.use(cors(corsOptions)).
 // app.options('*', cors(corsOptions)); // Explicitly handle OPTIONS for all routes
