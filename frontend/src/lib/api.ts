@@ -210,7 +210,13 @@ const apiClient = {
     // Construct the URL
     const base = this.BACKEND_API_URL.endsWith('/') ? this.BACKEND_API_URL.slice(0, -1) : this.BACKEND_API_URL;
     const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-    const url = `${base}/${path}`;
+    let url = `${base}/${path}`;
+
+    // --- CACHE BUSTING IMPLEMENTATION ---
+    // Append a unique timestamp to every request to prevent caching issues.
+    const separator = url.includes('?') ? '&' : '?';
+    url = `${url}${separator}cb=${Date.now()}`;
+
     console.log(`[api.ts] DEBUG: Making ${options.method || 'GET'} request to: ${url}`);
     
     let token = '';
