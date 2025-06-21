@@ -29,6 +29,11 @@ app.use((req, res, next) => {
   // Crucial for telling caches to vary response by Origin
   res.setHeader('Vary', 'Origin');
 
+  // Aggressive no-cache headers as a last resort
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   // Set other CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
