@@ -12,42 +12,7 @@ const router = express.Router();
 
 
 
-router.use((req, res, next) => {
 
-  next();
-});
-
-// CORS middleware for API routes
-const apiCors = (req, res, next) => {
-  const allowedOrigins = [
-    'https://practicegeniusv2.netlify.app',
-    'http://localhost:3000',
-    'https://practicegenius-api.onrender.com',
-    'http://localhost:3001',
-    'https://practicegenius.netlify.app'
-  ];
-
-  const origin = req.headers.origin;
-  const requestOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', requestOrigin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Expose-Headers', 'x-auth-token');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-auth-token');
-    res.setHeader('Access-Control-Max-Age', '86400');
-    return res.status(204).send();
-  }
-
-  next();
-};
-
-// Apply CORS to all API routes
-router.use(apiCors);
 
 // Health check route (must be first)
 router.use(healthRoutes);
