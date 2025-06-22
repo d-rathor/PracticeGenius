@@ -394,6 +394,10 @@ These fixes were crucial for establishing stable communication between the deplo
 
 ## Release History
 
+### v2.0.0 (June 23, 2025) - Fully Stable Version
+- **CORS Resolution**: Resolved persistent, critical CORS errors that blocked API access from the custom domain (`practicegenius.online`). The fix involved removing a conflicting, redundant CORS middleware from the backend router (`routes/index.js`) and centralizing all CORS logic into `server.js` using the standard `cors` package. This ensures reliable communication between the frontend and backend on production.
+- **Application Stability**: With the CORS issue fixed, the application is now considered fully stable across all features and environments.
+
 ### v1.2.0 (June 16, 2025) - Core Features Stable
 - **User Management**: Full CRUD operations for users, including admin management capabilities.
 - **Worksheet Management**: Comprehensive CRUD operations for worksheets, including file uploads to Backblaze B2 and secure downloads via pre-signed URLs.
