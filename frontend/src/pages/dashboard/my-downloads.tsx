@@ -54,7 +54,9 @@ const MyDownloadedWorksheetsPage: NextPageWithLayout = () => {
           <p className="text-gray-600">You haven't downloaded any worksheets yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {downloadedWorksheets.map((logEntry) => (
+            {downloadedWorksheets
+              .filter(logEntry => logEntry.worksheet) // Filter out entries for deleted worksheets
+              .map((logEntry) => (
               <div key={logEntry._id} className="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 ease-in-out">
                 {logEntry.worksheet.thumbnailUrl && (
                   <img 
