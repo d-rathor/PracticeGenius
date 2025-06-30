@@ -3,9 +3,12 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 import Link from 'next/link';
 import SubscriptionService, { Subscription } from '@/services/subscription.service';
+import { SubscriptionPlan } from '@/types/types';
+import PlanGrid from '@/components/dashboard/PlanGrid';
 
 const DashboardPage: React.FC = () => {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+    const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -15,19 +18,26 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    const fetchSubscription = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const subscriptionApiResponse = await SubscriptionService.getCurrentSubscription();
+        const [plansResponse, subscriptionApiResponse] = await Promise.all([
+          SubscriptionService.getSubscriptionPlans(),
+          SubscriptionService.getCurrentSubscription(),
+        ]);
+
+        setAllPlans(plansResponse || []);
+        
         const actualSubscription = subscriptionApiResponse?.success ? subscriptionApiResponse.data : null;
         setSubscription(actualSubscription);
+
       } catch (error) {
-        console.error('Failed to fetch subscription:', error);
+        console.error('Failed to fetch dashboard data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSubscription();
+    fetchDashboardData();
   }, []);
 
   return (
@@ -71,6 +81,23 @@ const DashboardPage: React.FC = () => {
                 </Link>
               </CardFooter>
             </Card>
+
+            {/* Available Plans Section */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
+              <PlanGrid 
+                plans={allPlans}
+                currentSubscription={subscription}
+                showActions={false}
+              />
+              <p className="text-center text-sm text-gray-600 mt-6">
+                If you want to upgrade/change your plans, please click on{' '}
+                <Link href="/dashboard/subscription" className="text-orange-500 hover:underline font-medium">
+                  Subscription
+                </Link>
+                {' '}on the left hand side.
+              </p>
+            </div>
           </>
         )}
       </div>

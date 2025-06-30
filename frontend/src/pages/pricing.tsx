@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionService from '@/services/subscription.service';
 import type { SubscriptionPlan } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import Link from 'next/link';
 
 const PricingPage: React.FC = () => {
+    const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
 
@@ -114,6 +117,24 @@ const PricingPage: React.FC = () => {
               <p className="text-xl text-gray-500">No subscription plans available at the moment. Please check back later.</p>
             </div>
           )}
+
+          <div className="mt-8 text-center text-gray-600">
+            {user ? (
+              <p>For managing your subscriptions, pls click on My Account--&gt;Subscription.</p>
+            ) : (
+              <p>
+                Please{' '}
+                <Link href="/auth/signup" className="text-orange-500 hover:underline font-medium">
+                  register
+                </Link>
+                /
+                <Link href="/auth/login" className="text-orange-500 hover:underline font-medium">
+                  login
+                </Link>{' '}
+                to subscribe and upgrade your plans as per above.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
