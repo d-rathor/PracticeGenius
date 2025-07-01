@@ -35,7 +35,7 @@ router.get('/recent', getRecentWorksheets);
 router.post('/', 
   auth, 
   authorize('admin'), 
-  b2WorksheetUpload.single('worksheetDocument'), // Use B2 uploader for the main worksheet file
+  b2WorksheetUpload.single('worksheetFile'), // Use B2 uploader for the main worksheet file
   createWorksheet
 );
 
@@ -54,7 +54,7 @@ router.get('/:id', getWorksheetById);
 router.put('/:id', 
   auth, 
   authorize('admin'), 
-  b2WorksheetUpload.single('worksheetDocument'), // Use B2 uploader for the main worksheet file
+  b2WorksheetUpload.single('worksheetFile'), // Use B2 uploader for the main worksheet file
   updateWorksheet
 );
 

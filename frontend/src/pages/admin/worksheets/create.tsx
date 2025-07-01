@@ -149,7 +149,7 @@ const CreateWorksheet: React.FC = () => {
       // data.append('subscriptionPlanId', formData.subscriptionPlanId); // We send subscriptionLevel instead
 
       if (formData.worksheetDocument) {
-        data.append('worksheetDocument', formData.worksheetDocument); // Ensure correct field name
+        data.append('worksheetFile', formData.worksheetDocument); // Use 'worksheetFile' to match backend
       }
       
       // Send data to API

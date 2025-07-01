@@ -20,7 +20,7 @@ interface Worksheet {
   content: string;
   downloadCount: number;
   dateCreated: string;
-  imageUrl?: string; // Optional, as not all worksheets might have a preview image
+  previewUrl?: string; // This is the pre-signed URL for the preview image
   // Add fields related to the downloadable file, assuming backend provides them:
   fileKey?: string; 
   fileUrl: string; // This is the B2 URL, not the pre-signed one for direct download by user
@@ -255,7 +255,7 @@ const WorksheetDetailPage: React.FC = () => {
                 <Card className="h-full">
                   <div className="relative w-full h-64 bg-gray-100 rounded-t-lg flex items-center justify-center overflow-hidden">
                     <img 
-                      src={worksheet.imageUrl || '/images/Worksheet-logo-image.png'}
+                      src={worksheet.previewUrl || '/images/Worksheet-logo-image.png'}
                       alt={worksheet.title}
                       className="w-full h-full object-contain rounded-t-lg"
                     />
@@ -324,60 +324,7 @@ const WorksheetDetailPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div> {/* Wrapper for Preview section */} 
-                        <h2 className="text-xl font-semibold mb-3 text-gray-800">Preview</h2>
-                        {/* Document Preview Logic with subscription check */} 
-                        {canUserAccessWorksheet(worksheet.subscriptionLevel, user?.role, user?.activeSubscription?.plan?.name) ? (
-                          <div className="bg-gray-100 rounded-lg border border-gray-300 mb-6 min-h-[500px] overflow-hidden">
-                            {worksheet.fileUrl && worksheet.mimeType === 'application/pdf' ? (
-                            <iframe 
-                              src={worksheet.fileUrl} 
-                              title={`${worksheet.title} Preview`} 
-                              width="100%" 
-                              height="500px" 
-                              style={{ border: 'none' }}
-                            />
-                          ) : worksheet.fileUrl && (worksheet.mimeType === 'application/msword' || worksheet.mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
-                            <div className="p-6 text-center flex flex-col items-center justify-center h-full">
-                              <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path><path d="M14.5 3.5V9h5.5"></path><path d="M9 13h6"></path><path d="M9 17h3"></path></svg>
-                              <p className="text-gray-600 font-medium">Preview is not available for Word documents.</p>
-                              <p className="text-sm text-gray-500 mt-1">Please download the file to view its content.</p>
-                              {isAuthenticated && worksheet.fileKey && (
-                                <Button 
-                                  onClick={handleDownload}
-                                  disabled={isDownloading}
-                                  variant="outline"
-                                  size="sm"
-                                  className="mt-4"
-                                >
-                                  {isDownloading ? 'Downloading...' : 'Download'}
-                                </Button>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="p-6 text-center flex flex-col items-center justify-center h-full">
-                               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M7.828 19.828a4 4 0 01-5.656 0M12 6V5m0 14v-1m4.95-11.05l.707-.707m-10.607 0l-.707.707M5.05 19.95l.707.707m10.607 0l-.707-.707"></path></svg>
-                              <p className="text-gray-600 font-medium">No preview available for this worksheet.</p>
-                              {worksheet.fileKey && isAuthenticated && (
-                                <p className="text-sm text-gray-500 mt-1">You can try downloading the file.</p>
-                              )}
-                            </div>
-                          )}
-                          </div>
-                        ) : (
-                          <div className="bg-gray-100 rounded-lg border border-gray-300 mb-6 min-h-[300px] overflow-hidden p-6 text-center flex flex-col items-center justify-center">
-                            <svg className="w-12 h-12 text-orange-500 mb-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 15v2m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path><path d="M9 12l2 2 4-4"></path></svg>
-                            <p className="text-gray-700 font-medium mb-2">
-                              A <span className="font-semibold">{worksheet.subscriptionLevel}</span> subscription is required to preview this worksheet.
-                            </p>
-                            <Link href="/pricing" passHref>
-                              <Button className="mt-2 bg-orange-500 hover:bg-orange-600 text-white">
-                                Upgrade Your Plan
-                              </Button>
-                            </Link>
-                          </div>
-                        )}
-                      </div>
+
                     </div>
                   </CardContent>
                 </Card>

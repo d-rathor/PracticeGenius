@@ -181,7 +181,7 @@ const EditWorksheet: React.FC = () => {
       data.append('description', formData.description);
       data.append('content', formData.content);
       if (formData.pdfFile) {
-        data.append('pdfFile', formData.pdfFile);
+        data.append('worksheetFile', formData.pdfFile);
       }
       
       // Get token from localStorage with safety check

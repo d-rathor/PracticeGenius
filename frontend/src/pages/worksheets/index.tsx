@@ -15,6 +15,7 @@ interface Worksheet {
   difficulty: string;
   description: string;
   imageUrl: string;
+  previewUrl?: string;
   subscriptionLevel: string;
   downloads?: number;
   downloadCount?: number;
@@ -49,6 +50,7 @@ const WorksheetsPage: React.FC = () => {
           downloads: worksheet.downloads || worksheet.downloadCount || 0,
           description: worksheet.description || 'No description available.',
           imageUrl: worksheet.imageUrl || '/images/Worksheet-logo-image.png',
+          previewUrl: worksheet.previewUrl,
           createdAt: worksheet.createdAt || new Date().toISOString()
         }));
 
@@ -192,7 +194,7 @@ const WorksheetsPage: React.FC = () => {
                 {filteredWorksheets.map((worksheet) => (
                   <Link key={worksheet._id} href={`/worksheets/${worksheet._id}`} passHref>
                     <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
-                      <img src={worksheet.imageUrl} alt={worksheet.title} className="w-full h-40 object-cover rounded-t-lg" />
+                      <img src={worksheet.previewUrl || worksheet.imageUrl} alt={worksheet.title} className="w-full h-40 object-cover object-top rounded-t-lg" />
                       <CardContent className="p-4 flex flex-col flex-grow">
                         <div className="flex-grow">
                           <div className="flex justify-between items-start mb-2">

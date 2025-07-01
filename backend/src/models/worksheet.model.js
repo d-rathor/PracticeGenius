@@ -31,13 +31,11 @@ const worksheetSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  // Fields for Backblaze B2 file storage
-  fileKey: { // Object key in B2, e.g., worksheets/timestamp-filename.pdf
+  fileKey: {
     type: String,
     trim: true
-    // Not strictly required here as it's set by upload logic, but good to define
   },
-  fileUrl: { // Full URL to the file in B2 (often referred to as 'location' by multer-s3)
+  fileUrl: {
     type: String,
     trim: true,
     required: [true, 'File URL is required after upload']
@@ -46,16 +44,24 @@ const worksheetSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  mimeType: { // e.g., application/pdf, image/jpeg
+  mimeType: {
     type: String,
     trim: true
   },
-  fileSize: { // Size in bytes
+  fileSize: {
     type: Number
   },
   thumbnailUrl: {
     type: String,
     default: '/assets/default-worksheet-thumbnail.png'
+  },
+  previewUrl: {
+    type: String,
+    trim: true
+  },
+  previewKey: {
+    type: String,
+    trim: true
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -65,14 +71,6 @@ const worksheetSchema = new mongoose.Schema({
   downloads: {
     type: Number,
     default: 0
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
 }, {
   timestamps: true,

@@ -8,6 +8,8 @@ const path = require('path');
 const fs = require('fs');
 const { S3Client, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { generatePdfPreview } = require('../utils/pdfPreviewGenerator');
+const { uploadToB2 } = require('../utils/b2Uploader');
 
 // B2 Configuration (should ideally be shared from a config file)
 const B2_KEY_ID = process.env.B2_KEY_ID;
@@ -84,13 +86,29 @@ exports.getAllWorksheets = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .skip(startIndex)
     .limit(limit);
+
+  // Generate pre-signed URLs for previews
+  const worksheetsWithSignedUrls = await Promise.all(
+    worksheets.map(async (worksheet) => {
+      const worksheetObj = worksheet.toObject();
+      if (worksheetObj.previewKey && s3Client) {
+        const command = new GetObjectCommand({
+          Bucket: B2_BUCKET_NAME,
+          Key: worksheetObj.previewKey,
+        });
+        // Generate a URL that expires in 1 hour
+        worksheetObj.previewUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+      }
+      return worksheetObj;
+    })
+  );
   
   // Get total count
   const total = await Worksheet.countDocuments(query);
   
   res.json({
     success: true,
-    data: worksheets,
+    data: worksheetsWithSignedUrls,
     pagination: {
       total,
       page,
@@ -127,27 +145,41 @@ exports.getRecentWorksheets = asyncHandler(async (req, res) => {
 exports.createWorksheet = asyncHandler(async (req, res) => {
   const { title, description, subject, grade, subscriptionLevel, keywords } = req.body;
 
-  // Check if a file was uploaded by our B2 middleware
-  if (!req.file) {
-    throw new APIError('Worksheet document is required and was not uploaded.', 400);
+  if (!req.file || !req.file.buffer) {
+    throw new APIError('Worksheet document is required.', 400);
   }
 
-  // Extract B2 file details from req.file
-  const fileData = {
-    fileKey: req.file.key, // Key in B2 (path)
-    fileUrl: req.file.location, // Full URL from B2 (provided by multer-s3)
-    originalFilename: req.file.originalname,
-    mimeType: req.file.mimetype,
-    fileSize: req.file.size,
-  };
+  // 1. Upload the original file to B2
+  const { fileUrl, fileKey } = await uploadToB2(
+    req.file.buffer,
+    req.file.originalname,
+    req.file.mimetype,
+    'worksheets'
+  );
 
-  // Parse keywords if provided as string
+  let previewUrl, previewKey;
+
+  // 2. If it's a PDF, generate and upload a preview
+  if (req.file.mimetype === 'application/pdf') {
+    const previewBuffer = await generatePdfPreview(req.file.buffer);
+    if (previewBuffer) {
+      const previewData = await uploadToB2(
+        previewBuffer,
+        `${path.parse(req.file.originalname).name}.png`,
+        'image/png',
+        'previews'
+      );
+      previewUrl = previewData.fileUrl;
+      previewKey = previewData.fileKey;
+    }
+  }
+
   let parsedKeywords = keywords;
   if (typeof keywords === 'string') {
     parsedKeywords = keywords.split(',').map(keyword => keyword.trim());
   }
 
-  // Create worksheet
+  // 3. Create worksheet entry in the database
   const worksheet = await Worksheet.create({
     title,
     description,
@@ -155,17 +187,21 @@ exports.createWorksheet = asyncHandler(async (req, res) => {
     grade,
     subscriptionLevel,
     keywords: parsedKeywords,
-    ...fileData, // Spread B2 file data
-    // thumbnailUrl: will use model default or can be set if provided separately
-    createdBy: req.user.id
+    fileUrl,
+    fileKey,
+    previewUrl,
+    previewKey,
+    originalFilename: req.file.originalname,
+    mimeType: req.file.mimetype,
+    fileSize: req.file.size,
+    createdBy: req.user.id,
   });
 
-  // Populate creator
   await worksheet.populate('createdBy', 'name email');
 
   res.status(201).json({
     success: true,
-    data: worksheet
+    data: worksheet,
   });
 });
 
@@ -181,10 +217,23 @@ exports.getWorksheetById = asyncHandler(async (req, res) => {
   if (!worksheet) {
     throw new APIError('Worksheet not found', 404);
   }
+
+  // Convert to plain object to modify
+  const worksheetObj = worksheet.toObject();
+
+  // Generate a pre-signed URL for the preview if it exists
+  if (worksheetObj.previewKey && s3Client) {
+    const command = new GetObjectCommand({
+      Bucket: B2_BUCKET_NAME,
+      Key: worksheetObj.previewKey,
+    });
+    // Generate a URL that expires in 1 hour
+    worksheetObj.previewUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  }
   
   res.json({
     success: true,
-    data: worksheet
+    data: worksheetObj
   });
 });
 
@@ -195,64 +244,80 @@ exports.getWorksheetById = asyncHandler(async (req, res) => {
  */
 exports.updateWorksheet = asyncHandler(async (req, res) => {
   let worksheet = await Worksheet.findById(req.params.id);
-  
+
   if (!worksheet) {
     throw new APIError('Worksheet not found', 404);
   }
-  
-  // Update fields
+
+  // Update text fields
   const { title, description, subject, grade, subscriptionLevel, keywords } = req.body;
-  
-  // Parse keywords if provided as string
-  let parsedKeywords = keywords;
-  if (typeof keywords === 'string') {
-    parsedKeywords = keywords.split(',').map(keyword => keyword.trim());
-  }
-  
-  // Update basic fields
   worksheet.title = title || worksheet.title;
   worksheet.description = description || worksheet.description;
   worksheet.subject = subject || worksheet.subject;
   worksheet.grade = grade || worksheet.grade;
   worksheet.subscriptionLevel = subscriptionLevel || worksheet.subscriptionLevel;
-  worksheet.keywords = parsedKeywords || worksheet.keywords;
-  
-  // Update file if a new one is uploaded via B2 middleware
-  if (req.file) {
-    // If there was an old file, try to delete it from B2
-    if (worksheet.fileKey && s3Client) {
-      const deleteParams = {
-        Bucket: B2_BUCKET_NAME,
-        Key: worksheet.fileKey,
-      };
-      try {
-        await s3Client.send(new DeleteObjectCommand(deleteParams));
-        console.log(`Successfully deleted old B2 object: ${worksheet.fileKey}`);
-      } catch (err) {
-        console.error(`Error deleting old B2 object ${worksheet.fileKey}:`, err);
-        // Decide if this error should halt the update or just be logged
+  if (typeof keywords === 'string') {
+    worksheet.keywords = keywords.split(',').map(keyword => keyword.trim());
+  } else if (keywords) {
+    worksheet.keywords = keywords;
+  }
+
+  // If a new file is uploaded, handle file and preview replacement
+  if (req.file && req.file.buffer) {
+    // 1. Delete old files from B2 (main file and preview)
+    const keysToDelete = [worksheet.fileKey, worksheet.previewKey].filter(Boolean);
+    if (keysToDelete.length > 0 && s3Client) {
+      for (const key of keysToDelete) {
+        try {
+          await s3Client.send(new DeleteObjectCommand({ Bucket: B2_BUCKET_NAME, Key: key }));
+          console.log(`Successfully deleted old B2 object: ${key}`);
+        } catch (err) {
+          console.error(`Error deleting old B2 object ${key}:`, err);
+        }
       }
     }
 
-    // Update metadata with new file details
-    worksheet.fileKey = req.file.key;
-    worksheet.fileUrl = req.file.location;
+    // 2. Upload new file
+    const { fileUrl, fileKey } = await uploadToB2(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      'worksheets'
+    );
+    worksheet.fileUrl = fileUrl;
+    worksheet.fileKey = fileKey;
     worksheet.originalFilename = req.file.originalname;
     worksheet.mimeType = req.file.mimetype;
     worksheet.fileSize = req.file.size;
+
+    // 3. Generate and upload new preview if it's a PDF
+    if (req.file.mimetype === 'application/pdf') {
+      const previewBuffer = await generatePdfPreview(req.file.buffer);
+      if (previewBuffer) {
+        const previewData = await uploadToB2(
+          previewBuffer,
+          `${path.parse(req.file.originalname).name}.png`,
+          'image/png',
+          'previews'
+        );
+        worksheet.previewUrl = previewData.fileUrl;
+        worksheet.previewKey = previewData.fileKey;
+      } else {
+        worksheet.previewUrl = null;
+        worksheet.previewKey = null;
+      }
+    } else {
+      worksheet.previewUrl = null;
+      worksheet.previewKey = null;
+    }
   }
 
-  // Thumbnail handling removed for now, will use model default or be set separately.
-  
-  // Save worksheet
   await worksheet.save();
-  
-  // Populate creator
   await worksheet.populate('createdBy', 'name email');
-  
+
   res.json({
     success: true,
-    data: worksheet
+    data: worksheet,
   });
 });
 
@@ -268,19 +333,16 @@ exports.deleteWorksheet = asyncHandler(async (req, res) => {
     throw new APIError('Worksheet not found', 404);
   }
   
-  // Delete the file from B2 if it exists
-  if (worksheet.fileKey && s3Client) {
-    const deleteParams = {
-      Bucket: B2_BUCKET_NAME,
-      Key: worksheet.fileKey,
-    };
-    try {
-      await s3Client.send(new DeleteObjectCommand(deleteParams));
-      console.log(`Successfully deleted B2 object: ${worksheet.fileKey}`);
-    } catch (err) {
-      console.error(`Error deleting B2 object ${worksheet.fileKey}:`, err);
-      // Decide if this error should halt the process or just be logged
-      // For a delete operation, you might still want to proceed with deleting the DB record
+  // Delete the file and its preview from B2
+  const keysToDelete = [worksheet.fileKey, worksheet.previewKey].filter(Boolean);
+  if (keysToDelete.length > 0 && s3Client) {
+    for (const key of keysToDelete) {
+      try {
+        await s3Client.send(new DeleteObjectCommand({ Bucket: B2_BUCKET_NAME, Key: key }));
+        console.log(`Successfully deleted B2 object: ${key}`);
+      } catch (err) {
+        console.error(`Error deleting B2 object ${key}:`, err);
+      }
     }
   }
   
