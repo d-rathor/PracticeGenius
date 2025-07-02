@@ -22,6 +22,13 @@ const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(helmet()); // Security headers
+
+// Add this block for debugging environment variables in production
+console.log('--- Environment Variable Debug ---');
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`CORS_ORIGIN read from environment: ${process.env.CORS_ORIGIN}`);
+console.log('------------------------------------');
+
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
