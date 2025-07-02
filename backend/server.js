@@ -50,6 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/worksheets', worksheetRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/subscription-plans', subscriptionRoutes); // Alias for frontend compatibility
 app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
