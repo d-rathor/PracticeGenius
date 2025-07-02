@@ -27,10 +27,17 @@ async function generatePdfPreview(pdfBuffer) {
     // This avoids conflicts with the Windows system 'convert.exe'.
     const args = [`${tempPdfPath}[0]`, tempPngPath];
     await new Promise((resolve, reject) => {
-      const magickPath = 'C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe';
+      const magickPath = process.env.MAGICK_PATH;
+      if (!magickPath) {
+        const errMsg = 'MAGICK_PATH environment variable not set. Cannot generate PDF previews.';
+        console.error(errMsg);
+        return reject(new Error(errMsg));
+      }
+
       execFile(magickPath, ['convert', ...args], (error, stdout, stderr) => {
         if (error) {
           console.error('ImageMagick Error:', stderr);
+          console.error(`Failed to execute: ${magickPath} convert ${args.join(' ')}`);
           return reject(error);
         }
         resolve(stdout);
