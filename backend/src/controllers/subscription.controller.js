@@ -118,6 +118,12 @@ const getAllSubscriptionPlans = asyncHandler(async (req, res) => {
       }
     };
   });
+
+  // --- PRODUCTION DEBUG LOG ---
+  console.log('--- Formatted Subscription Plans for Production Debug ---');
+  console.log(JSON.stringify(formattedPlans, null, 2));
+  console.log('---------------------------------------------------------');
+
   res.status(200).json({
     success: true,
     data: formattedPlans,
