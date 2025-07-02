@@ -4,7 +4,10 @@ FROM node:18-slim
 
 # Install ImageMagick, which is required for PDF preview generation.
 # The --no-install-recommends flag keeps the image size smaller.
-RUN apt-get update && apt-get install -y imagemagick --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y imagemagick ghostscript --no-install-recommends && \
+    sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read|write" pattern="PDF" \/>/g' /etc/ImageMagick-6/policy.xml && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
