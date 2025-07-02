@@ -8,19 +8,12 @@ const asyncHandler = require('../utils/async-handler');
  * @access  Public
  */
 exports.getAllSubscriptionPlans = asyncHandler(async (req, res) => {
-  const plans = await SubscriptionPlan.find({}).lean();
-  const formattedPlans = plans.map(plan => {
-    return {
-      ...plan,
-      prices: {
-        monthly: plan.monthlyPrice,
-        yearly: plan.yearlyPrice
-      }
-    };
-  });
+  // Fetch active plans, sort by monthly price, and use .lean() for performance.
+  const plans = await SubscriptionPlan.find({ isActive: true }).sort({ 'price.monthly': 1 }).lean();
+  
   res.status(200).json({
     success: true,
-    data: formattedPlans,
+    data: plans, // Send the data directly without transformation.
   });
 });
 
