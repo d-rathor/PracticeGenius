@@ -13,6 +13,7 @@ const userRoutes = require('./src/routes/user.routes');
 const worksheetRoutes = require('./src/routes/worksheet.routes');
 const subscriptionRoutes = require('./src/routes/subscription.routes');
 const settingsRoutes = require('./src/routes/settings.routes');
+const subscriptionPlanRoutes = require('./src/routes/subscription-plan.routes');
 
 // Initialize express app
 const app = express();
@@ -50,7 +51,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/worksheets', worksheetRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
-app.use('/api/subscription-plans', subscriptionRoutes); // Alias for frontend compatibility
+app.use('/api/subscription-plans', subscriptionPlanRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
