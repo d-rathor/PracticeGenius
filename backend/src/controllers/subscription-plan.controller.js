@@ -8,11 +8,19 @@ const asyncHandler = require('../utils/async-handler');
  * @access  Public
  */
 exports.getAllSubscriptionPlans = asyncHandler(async (req, res) => {
-  const plans = await SubscriptionPlan.find().sort({ price: 1 });
-  
-  res.json({
+  const plans = await SubscriptionPlan.find({}).lean();
+  const formattedPlans = plans.map(plan => {
+    return {
+      ...plan,
+      prices: {
+        monthly: plan.monthlyPrice,
+        yearly: plan.yearlyPrice
+      }
+    };
+  });
+  res.status(200).json({
     success: true,
-    data: plans
+    data: formattedPlans,
   });
 });
 

@@ -108,25 +108,10 @@ const getRecentSubscriptions = asyncHandler(async (req, res) => {
  * @access  Private/Admin
  */
 const getAllSubscriptionPlans = asyncHandler(async (req, res) => {
-  const plans = await SubscriptionPlan.find({}).lean(); // Use .lean() for plain JS objects
-  const formattedPlans = plans.map(plan => {
-    return {
-      ...plan,
-      prices: {
-        monthly: plan.monthlyPrice,
-        yearly: plan.yearlyPrice
-      }
-    };
-  });
-
-  // --- PRODUCTION DEBUG LOG ---
-  console.log('--- Formatted Subscription Plans for Production Debug ---');
-  console.log(JSON.stringify(formattedPlans, null, 2));
-  console.log('---------------------------------------------------------');
-
-  res.status(200).json({
+  const plans = await SubscriptionPlan.find();
+  res.json({
     success: true,
-    data: formattedPlans,
+    data: plans,
   });
 });
 
