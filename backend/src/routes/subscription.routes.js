@@ -1,11 +1,5 @@
 const express = require('express');
-const {
-  getCurrentSubscription,
-  createCheckoutSession,
-  verifyPayment,
-  cancelActiveSubscription,
-  getAllSubscriptionPlans,
-} = require('../controllers/subscription.controller.js');
+const { getCurrentSubscription, cancelSubscription, createCheckoutSession, verifyPayment, getAllSubscriptionPlans, cancelActiveSubscription } = require('../controllers/subscription.controller.js');
 const { protect } = require('../middleware/auth.js');
 
 const router = express.Router();

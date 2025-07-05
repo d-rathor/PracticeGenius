@@ -3,110 +3,6 @@ const User = require('../models/user.model');
 const Subscription = require('../models/subscription.model');
 const SubscriptionPlan = require('../models/subscription-plan.model');
 
-// @desc    Create a Stripe checkout session
-// @route   POST /api/payments/create-checkout-session
-// @access  Private
-const createCheckoutSession = async (req, res) => {
-  const { planId, billingCycle = 'monthly' } = req.body;
-  const userId = req.user.id;
-
-  if (!planId) {
-    return res.status(400).json({ success: false, message: 'Plan ID is required' });
-  }
-
-  try {
-    const plan = await SubscriptionPlan.findById(planId);
-    if (!plan) {
-      return res.status(404).json({ success: false, message: 'Plan not found' });
-    }
-
-        // Handle the 'Free' plan as a special case, bypassing Stripe
-    if (plan.name === 'Free') {
-      try {
-        const existingSubscription = await Subscription.findOne({ user: userId });
-
-        // If user has an active, non-free subscription, they must cancel it first.
-        if (existingSubscription && existingSubscription.status === 'active' && existingSubscription.stripeSubscriptionId && !existingSubscription.stripeSubscriptionId.startsWith('free-')) {
-          return res.status(400).json({
-            success: false,
-            message: 'Please cancel your current paid subscription before switching to the Free plan.',
-          });
-        }
-
-        // If user already has an active free plan, do nothing.
-        if (existingSubscription && existingSubscription.status === 'active' && existingSubscription.stripeSubscriptionId && existingSubscription.stripeSubscriptionId.startsWith('free-')) {
-            return res.json({ success: true, message: 'You are already on the Free plan.', isFreeTier: true });
-        }
-
-        // If user has an inactive subscription, remove it before creating the new free one.
-        if (existingSubscription) {
-          await Subscription.findByIdAndDelete(existingSubscription._id);
-        }
-
-        const newSubscription = await Subscription.create({
-          user: userId,
-          plan: plan._id,
-          stripeSubscriptionId: `free-${userId}-${Date.now()}`, // Create a unique ID
-          stripePriceId: 'free-plan', // Placeholder
-          status: 'active',
-          currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 100)), // Set expiration far in the future
-        });
-
-        console.log(`Successfully created free subscription for user ${userId}`);
-        return res.json({ success: true, subscription: newSubscription, isFreeTier: true });
-
-      } catch (error) {
-        console.error('Error creating free subscription:', error);
-        return res.status(500).json({ success: false, message: 'Server error while creating free subscription' });
-      }
-    }
-
-    const priceId = plan.stripePriceId[billingCycle];
-    if (!priceId) {
-      return res.status(400).json({
-        success: false,
-        message: `Price for ${billingCycle} billing cycle not found for this plan.`
-      });
-    }
-
-    const user = await User.findById(userId).select('+stripeCustomerId');
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    let stripeCustomerId = user.stripeCustomerId;
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name,
-        metadata: { mongoUserId: user._id.toString() },
-      });
-      stripeCustomerId = customer.id;
-      user.stripeCustomerId = stripeCustomerId;
-      await user.save();
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'subscription',
-      customer: stripeCustomerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.CLIENT_URL}/dashboard/subscription?payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL}/dashboard/subscription?payment_canceled=true`,
-      metadata: {
-        userId: user._id.toString(),
-        planId: plan._id.toString(),
-      },
-    });
-
-    res.json({ success: true, sessionId: session.id });
-
-  } catch (error) {
-    console.error('Error creating Stripe checkout session:', error);
-    res.status(500).json({ success: false, message: 'Server error while creating checkout session' });
-  }
-};
-
 // @desc    Handle Stripe webhooks to fulfill orders
 // @route   POST /api/payments/webhook
 // @access  Public (accessible only by Stripe)
@@ -244,7 +140,7 @@ const verifyPaymentSession = async (req, res) => {
 };
 
 module.exports = {
-  createCheckoutSession,
+
   handleStripeWebhook,
   verifyPaymentSession,
 };
