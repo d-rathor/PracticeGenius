@@ -1,129 +1,106 @@
-import apiClient from '@/lib/api';
-import { ApiResponse, SubscriptionPlan } from '@/types/types'; // Import canonical type
-
-// Local Subscription interface (if different from a global one, otherwise import too)
-export interface Subscription {
-  id: string;
-  user: string;
-  plan: SubscriptionPlan;
-  status: 'active' | 'canceled' | 'expired';
-  startDate: string;
-  endDate: string;
-  paymentMethod: string;
-  paymentId?: string;
-  amount: number;
-  currency: string;
-  autoRenew: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateSubscriptionData {
-  planId: string;
-  paymentMethod: string;
-  paymentId?: string;
-  billingCycle: 'monthly' | 'yearly';
-  autoRenew: boolean;
-  amount: number;
-}
+import apiClient, { ApiResponse } from '@/lib/api';
+import { Subscription, SubscriptionPlan } from '@/types';
 
 /**
- * Subscription service for handling subscription-related API calls
- * Replaces localStorage usage with backend API calls
+ * Subscription service for handling subscription-related API calls.
  */
 const SubscriptionService = {
   /**
-   * Get all subscription plans
-   * @returns Array of subscription plans
+   * Get all subscription plans.
    */
-  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> { // Uses imported SubscriptionPlan
-    const response = await apiClient.get<{ success: boolean, data: SubscriptionPlan[] }>('/api/subscription-plans'); // apiClient.get will return data matching the backend structure, which aligns with canonical SubscriptionPlan
-    if (response && response.success && Array.isArray(response.data)) {
-      return response.data;
-    }
-    console.error('SubscriptionService: API response for plans was not in the expected format:', response);
-    return []; // Return empty array if data extraction fails
-  },
-  
-  /**
-   * Get subscription plan by ID
-   * @param id Subscription plan ID
-   * @returns Subscription plan data
-   */
-  async getSubscriptionPlanById(id: string): Promise<SubscriptionPlan | null> {
-    // Ensure the response structure from apiClient matches SubscriptionPlan or handle potential null/error cases
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     try {
-      const response = await apiClient.get<SubscriptionPlan>(`/api/subscription-plans/${id}`);
-      // Assuming the API returns the plan directly or in a data property
-      // Adjust based on actual API response structure if needed
-      return response; // Or response.data if applicable
+      const result = await apiClient.get<any>('/subscription-plans');
+      console.log('SubscriptionService: Received from API client:', result);
+
+      // Case 1: Result is the array of plans itself.
+      if (Array.isArray(result)) {
+        console.log('SubscriptionService: Result is an array. Returning as is.');
+        return result;
+      }
+
+      // Case 2: Result is an object like { success: true, data: [...] }.
+      if (result && typeof result === 'object' && Array.isArray(result.data)) {
+        console.log('SubscriptionService: Result is an object with a data property. Returning result.data.');
+        return result.data;
+      }
+      
+      // Fallback for unexpected structures.
+      console.warn('SubscriptionService: Unexpected response structure for subscription plans. Returning empty array.', result);
+      return [];
+
     } catch (error) {
-      console.error(`Error fetching subscription plan by ID ${id}:`, error);
-      return null;
+      console.error('Error fetching subscription plans:', error);
+      return []; // Return empty array on error to prevent UI crashes.
     }
-  },
-  
-  /**
-   * Get current user's active subscription
-   * @returns User's active subscription or null
-   */
-  async getCurrentSubscription(): Promise<ApiResponse<Subscription | null>> {
-    return apiClient.get<ApiResponse<Subscription | null>>('/api/subscriptions/current');
-  },
-  
-  /**
-   * Create a new subscription
-   * @param subscriptionData Subscription data
-   * @returns Created subscription
-   */
-  async createSubscription(subscriptionData: CreateSubscriptionData): Promise<ApiResponse<Subscription>> {
-    return apiClient.post<ApiResponse<Subscription>>('/api/subscriptions', subscriptionData);
-  },
-  
-  /**
-   * Cancel a subscription
-   * @param id Subscription ID
-   * @returns Updated subscription
-   */
-  async cancelSubscription(id: string) {
-    return apiClient.put<Subscription>(`/api/subscriptions/${id}/cancel`, {});
-  },
-  
-  /**
-   * Renew a subscription
-   * @param id Subscription ID
-   * @returns Updated subscription
-   */
-  async renewSubscription(id: string) {
-    return apiClient.put<Subscription>(`/api/subscriptions/${id}/renew`, {});
   },
 
   /**
-   * Update a subscription plan
-   * @param id The ID of the subscription plan to update
-   * @param data The data to update the plan with (Partial<SubscriptionPlan>)
-   * @returns The updated subscription plan
+   * Get the current user's active subscription.
    */
-  async updateSubscriptionPlan(id: string, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | null> {
+  async getCurrentSubscription(): Promise<Subscription | null> {
     try {
-      const response = await apiClient.put<SubscriptionPlan>(`/api/subscription-plans/${id}`, data);
-      return response; // Or response.data if the API wraps it
+      const response = await apiClient.get<ApiResponse<Subscription | null>>('/subscriptions/current');
+      return response.data;
     } catch (error) {
-      console.error(`Error updating subscription plan ${id}:`, error);
-      // Consider throwing the error or returning a more specific error object
-      // for the UI to handle, e.g., for displaying toast notifications.
+      // A 404 is an expected case for users without a subscription, not a true error.
+      if ((error as any)?.response?.status !== 404) {
+        console.error('Error fetching current subscription:', error);
+      }
       return null;
     }
   },
-  
+
   /**
-   * Get recent subscriptions (admin only)
-   * @param limit Number of subscriptions to return
-   * @returns Array of recent subscriptions
+   * Create a Stripe checkout session for a new subscription.
    */
-  async getRecentSubscriptions(limit: number = 5) {
-    return apiClient.get<Subscription[]>(`/api/subscriptions/recent?limit=${limit}`);
-  }
+  async createCheckoutSession(planId: string): Promise<{ sessionId: string }> {
+    try {
+      const response = await apiClient.post<ApiResponse<{ sessionId: string }>>('/subscriptions/create-checkout-session', { planId });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Verify a payment session after successful payment.
+   */
+  async verifyPaymentSession(sessionId: string): Promise<Subscription | null> {
+    try {
+      const response = await apiClient.post<ApiResponse<Subscription>>('/subscriptions/verify-payment', { sessionId });
+      return response.data;
+    } catch (error) {
+      console.error('Error verifying payment session:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Requests cancellation for the user's current active paid subscription.
+   */
+  async cancelPaidSubscription(): Promise<void> {
+    try {
+      await apiClient.delete<ApiResponse<void>>('/subscriptions/current');
+    } catch (error) {
+      console.error('Error canceling subscription:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update a subscription plan (Admin only).
+   */
+  async updateSubscriptionPlan(planId: string, updatedPlan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    try {
+      const response = await apiClient.put<ApiResponse<SubscriptionPlan>>(`/subscription-plans/${planId}`, updatedPlan);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating subscription plan ${planId}:`, error);
+      throw error;
+    }
+  },
 };
 
 export default SubscriptionService;

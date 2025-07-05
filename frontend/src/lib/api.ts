@@ -15,8 +15,13 @@ interface ApiRequestOptions extends RequestInit {
 /**
  * Base API client for making authenticated requests
  */
+// Ensure the API URL is correctly formatted with the /api path.
+// This handles cases where the env variable might be missing the path.
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const finalApiUrl = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
+
 const api = {
-  BACKEND_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  BACKEND_API_URL: finalApiUrl,
 
   /**
    * Make a GET request to the API
@@ -90,7 +95,6 @@ const api = {
       if (queryString) {
         endpoint = `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
       }
-      delete options.params; // Remove params from options before passing to fetch
     }
 
     // Construct the URL
@@ -103,10 +107,10 @@ const api = {
     url = `${url}${separator}cb=${Date.now()}`;
 
     console.log(`[api.ts] DEBUG: Making ${options.method || 'GET'} request to: ${url}`);
-    
+
     let token = '';
     if (typeof window !== 'undefined') {
-      token = localStorage.getItem('practicegenius_token') || ''; 
+      token = localStorage.getItem('practicegenius_token') || '';
     }
 
     const requestHeaders = new Headers(options.headers);
@@ -118,6 +122,7 @@ const api = {
     let processedBody = options.body;
 
     if (options.body instanceof FormData) {
+      // Let browser set Content-Type for FormData
       requestHeaders.delete('Content-Type');
     } else if (options.body && typeof options.body === 'object') {
       if (!requestHeaders.has('Content-Type')) {
@@ -128,11 +133,15 @@ const api = {
       }
     }
 
+    // Destructure body and headers from options to avoid conflicts.
+    // This is the key fix to prevent hanging requests.
+    const { body, headers, params, ...restOfOptions } = options;
+
     try {
       const response = await fetch(url, {
-        ...options, 
-        headers: requestHeaders, 
-        body: processedBody,    
+        ...restOfOptions,
+        headers: requestHeaders,
+        body: processedBody,
       });
 
       if (!response.ok) {
@@ -151,32 +160,36 @@ const api = {
             errorData = { message: `Failed to read error response text. Status: ${response.status}` };
           }
         }
-        
+
         const error = new Error(errorData.message || `API request failed with status ${response.status}`) as any;
-        error.response = response; 
+        error.response = response;
         error.status = response.status;
         error.data = errorData;
         throw error;
       }
 
-      if (response.status === 204) { 
+      if (response.status === 204) {
         return undefined as T;
       }
-      
+
       const responseText = await response.text();
+      if (!responseText) {
+        return null as T; // Handle empty responses gracefully
+      }
+
       try {
         return JSON.parse(responseText) as T;
       } catch (e) {
-        // If response is not JSON, return as text. E.g. for file downloads
-        return responseText as any as T; 
+        // If response is not JSON, return as text
+        return responseText as any as T;
       }
-
     } catch (error: any) {
       console.error(
-        'API Error in request method:', 
-        error.data || error.message, 
-        error.status ? `Status: ${error.status}`: '', 
-        'URL:', url
+        'API Error in request method:',
+        error.data || error.message,
+        error.status ? `Status: ${error.status}` : '',
+        'URL:',
+        url
       );
       throw error;
     }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import SubscriptionService from '@/services/subscription.service';
 import EditPlanModal from '@/components/admin/EditPlanModal';
-import { SubscriptionPlan } from '@/types/types';
+import { SubscriptionPlan } from '@/types';
 
 import AdminLayout from '@/components/layout/AdminLayout';
 
@@ -53,9 +53,9 @@ const AdminSubscriptionsPage: React.FC = () => {
               <div key={plan._id} className="p-4 border rounded-md shadow-sm">
                 <h2 className="text-xl font-semibold">{plan.name}</h2>
                 <p className="text-2xl font-bold text-indigo-600 mb-3">
-                  {plan.currency || 'INR'} {plan.price.monthly} <span className="text-sm font-normal text-gray-500">/month</span>
+                  {plan.currency || 'INR'} {plan.price} <span className="text-sm font-normal text-gray-500">/{plan.interval}</span>
                 </p>
-                <p className="text-sm text-gray-500">Stripe Price ID: {plan.stripePriceId}</p>
+                <p className="text-sm text-gray-500">Stripe Price IDs: Monthly: {plan.stripePriceId.monthly}, Yearly: {plan.stripePriceId.yearly}</p>
                 <p className="text-sm text-gray-500">Stripe Product ID: {plan.stripeProductId}</p>
                 <h3 className="mt-2 font-medium">Features:</h3>
                 {plan.features && plan.features.length > 0 ? (

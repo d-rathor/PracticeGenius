@@ -7,48 +7,15 @@ const {
   updateSubscriptionPlan,
   deleteSubscriptionPlan
 } = require('../controllers/subscription-plan.controller.js');
-const { auth, authorize } = require('../middleware/auth.js');
+const { protect: auth, authorize } = require('../middleware/auth.js');
 
-console.log('ROUTES/SUBSCRIPTION-PLAN.ROUTES.JS: Subscription plan router file loaded');
-
-router.use((req, res, next) => {
-  console.log(`ROUTES/SUBSCRIPTION-PLAN.ROUTES.JS: Request received in subscription plan router: ${req.method} ${req.originalUrl}, BasePath: ${req.baseUrl}, Path: ${req.path}`);
-  next();
-});
-
-/**
- * @route   GET /api/subscription-plans
- * @desc    Get all subscription plans
- * @access  Public
- */
+// Public route to get all subscription plans
 router.get('/', getAllSubscriptionPlans);
 
-/**
- * @route   POST /api/subscription-plans
- * @desc    Create a new subscription plan
- * @access  Private/Admin
- */
+// Admin routes for managing subscription plans
 router.post('/', auth, authorize(['admin']), createSubscriptionPlan);
-
-/**
- * @route   GET /api/subscription-plans/:id
- * @desc    Get subscription plan by ID
- * @access  Public
- */
-router.get('/:id', getSubscriptionPlanById);
-
-/**
- * @route   PUT /api/subscription-plans/:id
- * @desc    Update subscription plan
- * @access  Private/Admin
- */
+router.get('/:id', auth, authorize(['admin']), getSubscriptionPlanById);
 router.put('/:id', auth, authorize(['admin']), updateSubscriptionPlan);
-
-/**
- * @route   DELETE /api/subscription-plans/:id
- * @desc    Delete subscription plan
- * @access  Private/Admin
- */
 router.delete('/:id', auth, authorize(['admin']), deleteSubscriptionPlan);
 
 module.exports = router;

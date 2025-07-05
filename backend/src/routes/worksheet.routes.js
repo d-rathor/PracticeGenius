@@ -9,7 +9,7 @@ const {
   downloadWorksheet,
   getRecentWorksheets
 } = require('../controllers/worksheet.controller');
-const { auth, authorize } = require('../middleware/auth');
+const { protect: auth, authorize } = require('../middleware/auth');
 // const oldLocalUpload = require('../middleware/upload'); // Keep if needed for thumbnails later
 const b2WorksheetUpload = require('../config/fileUpload'); // New B2 uploader
 

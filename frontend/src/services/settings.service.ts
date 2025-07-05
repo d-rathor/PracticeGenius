@@ -32,7 +32,7 @@ const SettingsService = {
    * @returns Subscription settings data
    */
   async getSubscriptionSettings() {
-    return apiClient.get<SubscriptionSettings>('/api/settings/subscription');
+    return apiClient.get<SubscriptionSettings>('/settings/subscription');
   },
   
   /**
@@ -41,7 +41,7 @@ const SettingsService = {
    * @returns Updated settings
    */
   async updateSubscriptionSettings(settings: SubscriptionSettings) {
-    return apiClient.put<SubscriptionSettings>('/api/settings/subscription', settings);
+    return apiClient.put<SubscriptionSettings>('/settings/subscription', settings);
   },
   
   /**
@@ -49,7 +49,7 @@ const SettingsService = {
    * @returns Site settings data
    */
   async getSiteSettings() {
-    return apiClient.get<SiteSettings>('/api/settings/site');
+    return apiClient.get<SiteSettings>('/settings/site');
   },
   
   /**
@@ -58,7 +58,7 @@ const SettingsService = {
    * @returns Updated settings
    */
   async updateSiteSettings(settings: SiteSettings) {
-    return apiClient.put<SiteSettings>('/api/settings/site', settings);
+    return apiClient.put<SiteSettings>('/settings/site', settings);
   },
   
   /**
@@ -67,7 +67,7 @@ const SettingsService = {
    * @returns Settings data
    */
   async getSettingsByType(type: string) {
-    return apiClient.get<any>(`/api/settings/${type}`);
+    return apiClient.get<any>(`/settings/${type}`);
   },
   
   /**
@@ -77,7 +77,7 @@ const SettingsService = {
    * @returns Updated settings
    */
   async updateSettingsByType(type: string, data: any) {
-    return apiClient.put<any>(`/api/settings/${type}`, data);
+    return apiClient.put<any>(`/settings/${type}`, data);
   }
 };
 

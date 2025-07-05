@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getStats } = require('../controllers/admin.controller');
-const { auth, authorize } = require('../middleware/auth');
+const { protect: auth, authorize } = require('../middleware/auth');
 
 /**
  * @route   GET /api/admin/stats

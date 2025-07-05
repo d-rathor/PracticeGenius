@@ -1,7 +1,7 @@
 import React, { useEffect, useState, ReactElement } from 'react';
 import Link from 'next/link';
 import UserService, { UserWorksheetLogEntry } from '../../services/user.service';
-import { NextPageWithLayout } from '../../types/types'; // Assuming you have a NextPageWithLayout type
+import { NextPageWithLayout } from '../../types'; // Assuming you have a NextPageWithLayout type
 import DashboardLayout from '@/components/layout/DashboardLayout'; // Assuming a DashboardLayout component exists
 
 const MyDownloadedWorksheetsPage: NextPageWithLayout = () => {

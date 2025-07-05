@@ -1,36 +1,39 @@
 const express = require('express');
 const {
-  getAllSubscriptions,
   getCurrentSubscription,
-  getSubscriptionById,
-  createSubscription,
-  updateSubscription,
-  cancelSubscription,
-  renewSubscription,
-  getRecentSubscriptions,
+  createCheckoutSession,
+  verifyPayment,
+  cancelActiveSubscription,
   getAllSubscriptionPlans,
-  deleteSubscription
 } = require('../controllers/subscription.controller.js');
-const { auth, authorize } = require('../middleware/auth.js');
+const { protect } = require('../middleware/auth.js');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .get(auth, authorize(['admin']), getAllSubscriptions)
-  .post(auth, createSubscription);
+// @route   GET /api/subscriptions/current
+// @desc    Get the current subscription for the logged-in user
+// @access  Private
+router.get('/current', protect, getCurrentSubscription);
 
-router.get('/current', auth, getCurrentSubscription);
-router.get('/recent', auth, authorize(['admin']), getRecentSubscriptions);
-router.get('/plans', auth, getAllSubscriptionPlans);
+// @route   GET /api/subscriptions/plans
+// @desc    Get all available subscription plans
+// @access  Private
+router.get('/plans', protect, getAllSubscriptionPlans);
 
-router
-  .route('/:id')
-  .get(auth, getSubscriptionById)
-  .put(auth, authorize(['admin']), updateSubscription)
-  .delete(auth, authorize(['admin']), deleteSubscription);
+// @route   POST /api/subscriptions/create-checkout-session
+// @desc    Create a Stripe checkout session for a subscription
+// @access  Private
+router.post('/create-checkout-session', protect, createCheckoutSession);
 
-router.put('/:id/cancel', auth, cancelSubscription);
-router.put('/:id/renew', auth, renewSubscription);
+// @route   POST /api/subscriptions/verify-payment
+// @desc    Verify a Stripe payment and update the subscription
+// @access  Private
+router.post('/verify-payment', protect, verifyPayment);
+
+// @route   DELETE /api/subscriptions/current
+// @desc    Cancel the current user's active subscription at period end
+// @access  Private
+router.delete('/current', protect, cancelActiveSubscription);
+
 
 module.exports = router;

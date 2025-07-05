@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'user'],
     default: 'user'
   },
+  stripeCustomerId: {
+    type: String,
+    // This is created when the user makes their first payment.
+    select: false // Do not expose this sensitive ID in general API responses
+  },
   activeSubscription: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription'

@@ -5,6 +5,7 @@ const path = require('path');
 const { PORT, MONGODB_URI, NODE_ENV } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/error');
 const routes = require('./routes');
+const { handleStripeWebhook } = require('./controllers/payment.controller');
 
 // Initialize express app
 const app = express();
@@ -48,8 +49,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// The Stripe webhook route must be registered BEFORE express.json()
+// to ensure we receive the raw request body for signature verification.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
+
 // Standard middleware
-app.use(express.json());
+app.use(express.json()); // Middleware to parse JSON bodies for all other routes
 app.use(express.urlencoded({ extended: false }));
 
 // Logger

@@ -49,12 +49,12 @@ const authorize = (roles = []) => {
         message: 'Access denied. Insufficient permissions.'
       });
     }
-    
+
     next();
   };
 };
 
 module.exports = {
-  auth,
-  authorize
+  protect: auth,
+  authorize,
 };

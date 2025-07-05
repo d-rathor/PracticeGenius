@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import UserService from '@/services/user.service';
-import { User } from '@/types/types';
+import { User } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -210,7 +210,7 @@ const AdminUsersPage: React.FC = () => {
                             </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.activeSubscription || 'N/A'}
+                            {user.activeSubscription ? (typeof user.activeSubscription.plan === 'object' && user.activeSubscription.plan ? user.activeSubscription.plan.name : 'Active') : 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {formatDate(user.createdAt)}

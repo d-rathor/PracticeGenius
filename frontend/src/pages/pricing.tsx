@@ -77,7 +77,7 @@ const PricingPage: React.FC = () => {
             <div className="mt-12 grid gap-8 md:grid-cols-3">
               {subscriptionPlans.map((plan) => (
                 <div 
-                  key={plan.id} 
+                  key={plan._id} 
                   className={`bg-white rounded-lg shadow-lg overflow-hidden ${getPlanSpecificClasses(plan.name)}`}
                 >
                   {getPopularBadge(plan.name)}
@@ -85,7 +85,7 @@ const PricingPage: React.FC = () => {
                     <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
                     <div className="mt-4 flex items-baseline text-gray-900">
                       <span className="text-5xl font-extrabold tracking-tight">
-                        ₹{plan.price.monthly}
+                        ₹{plan.price}
                       </span>
                       <span className="ml-1 text-xl font-normal text-gray-500">
                         {plan.name === 'Free' ? '/forever' : '/per month'}

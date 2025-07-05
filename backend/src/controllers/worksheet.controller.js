@@ -368,20 +368,20 @@ exports.downloadWorksheet = asyncHandler(async (req, res, next) => {
   }
 
   // Check user's subscription level
-  const user = await User.findById(req.user.id).populate('activeSubscription');
+  const user = await User.findById(req.user.id).populate({
+    path: 'activeSubscription',
+    populate: {
+      path: 'plan',
+    },
+  });
 
   // If the user is not an admin, perform subscription and download limit checks
   if (user.role !== 'admin') {
     // Get user's subscription level
     let userSubscriptionLevel = 'Free';
-    if (user.activeSubscription && user.activeSubscription.status === 'active') {
-      const subscription = await Subscription.findById(user.activeSubscription).populate(
-        'plan'
-      );
-
-      if (subscription && subscription.plan) {
-        userSubscriptionLevel = subscription.plan.name;
-      }
+    const validStatuses = ['active', 'pending_cancellation'];
+    if (user.activeSubscription && validStatuses.includes(user.activeSubscription.status) && user.activeSubscription.plan) {
+      userSubscriptionLevel = user.activeSubscription.plan.name;
     }
 
     // Check if user can access this worksheet based on subscription level

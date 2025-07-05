@@ -2,7 +2,8 @@ import '../styles/globals.css';
 import type { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { NextPageWithLayout } from '@/types/types'; // Corrected import path
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { NextPageWithLayout } from '@/types'; // Corrected import path
 
 // If loading a variable font, you don't need to specify the font weight
 const inter = Inter({ subsets: ['latin'] });
@@ -17,9 +18,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
 
   return (
     <AuthProvider>
-      <main className={inter.className}>
-        {getLayout(<Component {...pageProps} />)}
-      </main>
+      <SubscriptionProvider>
+        <main className={inter.className}>
+          {getLayout(<Component {...pageProps} />)}
+        </main>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }

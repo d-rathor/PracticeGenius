@@ -1,104 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 import Link from 'next/link';
-import SubscriptionService, { Subscription } from '@/services/subscription.service';
-import { SubscriptionPlan } from '@/types/types';
 import PlanGrid from '@/components/dashboard/PlanGrid';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { SubscriptionPlan } from '@/types';
 
 const DashboardPage: React.FC = () => {
-    const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentSubscription, subscriptionPlans, loading, error } = useSubscription();
 
-  useEffect(() => {
-    const token = localStorage.getItem('practicegenius_token');
-    if (!token) {
-      window.location.href = '/auth/login?redirect=/dashboard';
-      return;
+  // Safely get the plan name
+  const getPlanName = () => {
+    if (!currentSubscription) return 'No active plan';
+    if (typeof currentSubscription.plan === 'object' && currentSubscription.plan !== null) {
+      return currentSubscription.plan.name;
     }
+    // If plan is just an ID, find it in the plans list
+    // Add a guard clause to ensure subscriptionPlans is an array before calling .find()
+    if (!Array.isArray(subscriptionPlans)) {
+      console.error('DashboardPage: subscriptionPlans is not an array when getPlanName was called.', subscriptionPlans);
+      return 'Unknown Plan'; // or 'Loading...' or some other placeholder
+    }
+    const plan = subscriptionPlans.find(p => p._id === currentSubscription.plan);
+    return plan ? plan.name : 'Unknown Plan';
+  };
 
-    const fetchDashboardData = async () => {
-      try {
-        const [plansResponse, subscriptionApiResponse] = await Promise.all([
-          SubscriptionService.getSubscriptionPlans(),
-          SubscriptionService.getCurrentSubscription(),
-        ]);
-
-        setAllPlans(plansResponse || []);
-        
-        const actualSubscription = subscriptionApiResponse?.success ? subscriptionApiResponse.data : null;
-        setSubscription(actualSubscription);
-
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+  // Get the current plan ID for the PlanGrid component
+  const currentPlanId = currentSubscription?.plan
+    ? (typeof currentSubscription.plan === 'object' ? currentSubscription.plan._id : currentSubscription.plan)
+    : null;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <div className="flex space-x-2">
-            <Link 
-              href="/dashboard/worksheets" 
-              className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded transition duration-300"
-            >
-              Browse Worksheets
-            </Link>
-          </div>
-        </div>
+      <div className="p-4 md:p-8">
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-          </div>
+        {loading ? (
+          <p>Loading your subscription details...</p>
         ) : (
-          <>
-            {/* Subscription Status Card */}
-            <Card className="mb-6">
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Subscription Status</h2>
-              </CardHeader>
-              <CardContent>
-                <div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold">Subscription Status</h2>
+                </CardHeader>
+                <CardContent>
                   <p className="text-sm text-gray-500">Current Plan</p>
-                  <p className="font-medium text-lg">{subscription?.plan?.name || 'No active plan'}</p>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Link 
-                  href="/dashboard/subscription" 
-                  className="text-orange-500 hover:text-orange-600 text-sm font-medium"
-                >
-                  Manage Subscription →
-                </Link>
-              </CardFooter>
-            </Card>
-
-            {/* Available Plans Section */}
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
-              <PlanGrid 
-                plans={allPlans}
-                currentSubscription={subscription}
-                showActions={false}
-              />
-              <p className="text-center text-sm text-gray-600 mt-6">
-                If you want to upgrade/change your plans, please click on{' '}
-                <Link href="/dashboard/subscription" className="text-orange-500 hover:underline font-medium">
-                  Subscription
-                </Link>
-                {' '}on the left hand side.
-              </p>
+                  <p className="text-xl font-bold">
+                    {getPlanName()}
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Link href="/dashboard/subscription" className="text-orange-500 hover:underline">
+                      Manage Subscription &rarr;
+                  </Link>
+                </CardFooter>
+              </Card>
             </div>
-          </>
+
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold">Available Plans</h2>
+                </CardHeader>
+                <CardContent>
+                  <PlanGrid 
+                    plans={subscriptionPlans} 
+                    currentPlanId={currentPlanId}
+                    showActions={false} 
+                    onSwitchPlan={() => {}} // No action needed on this page
+                    isSwitching={false}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>

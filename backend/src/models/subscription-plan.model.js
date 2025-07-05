@@ -14,18 +14,17 @@ const subscriptionPlanSchema = new mongoose.Schema({
     trim: true
   },
   price: {
-    monthly: {
-      type: Number,
-      required: [true, 'Monthly price is required']
-    },
-    yearly: {
-      type: Number,
-      required: [true, 'Yearly price is required']
-    }
+    type: Number,
+    required: true
   },
   currency: {
     type: String,
+    required: true,
     default: 'USD'
+  },
+  stripePriceId: {
+    monthly: { type: String, required: true },
+    yearly: { type: String, required: true }
   },
   features: [{
     type: String,
@@ -51,25 +50,7 @@ const subscriptionPlanSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Virtual for annual savings
-subscriptionPlanSchema.virtual('annualSavings').get(function() {
-  if (!this.price || !this.price.monthly || !this.price.yearly) return 0;
-  
-  const monthlyCost = this.price.monthly * 12;
-  const yearlyCost = this.price.yearly;
-  
-  return monthlyCost - yearlyCost;
-});
 
-// Virtual for annual savings percentage
-subscriptionPlanSchema.virtual('annualSavingsPercentage').get(function() {
-  if (!this.price || !this.price.monthly || !this.price.yearly) return 0;
-  
-  const monthlyCost = this.price.monthly * 12;
-  const yearlyCost = this.price.yearly;
-  
-  return Math.round(((monthlyCost - yearlyCost) / monthlyCost) * 100);
-});
 
 const SubscriptionPlan = mongoose.model('SubscriptionPlan', subscriptionPlanSchema);
 

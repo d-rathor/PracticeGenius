@@ -4,6 +4,7 @@ const userRoutes = require('./user.routes.js');
 const worksheetRoutes = require('./worksheet.routes.js');
 const adminRoutes = require('./admin.routes.js');
 const subscriptionRoutes = require('./subscription.routes.js');
+const paymentRoutes = require('./payment.routes.js');
 const subscriptionPlanRoutes = require('./subscription-plan.routes.js');
 const settingsRoutes = require('./settings.routes.js');
 const healthRoutes = require('./health.routes.js');
@@ -43,6 +44,7 @@ router.use('/users', userRoutes);
 router.use('/worksheets', worksheetRoutes);
 router.use('/admin', adminRoutes);
 router.use('/subscriptions', subscriptionRoutes);
+router.use('/payments', paymentRoutes);
 router.use('/subscription-plans', subscriptionPlanRoutes);
 router.use('/settings', settingsRoutes);
 

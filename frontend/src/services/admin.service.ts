@@ -19,7 +19,7 @@ const AdminService = {
   async getStats(): Promise<AdminStats> {
     try {
       // Provide the expected response type to the generic get method
-      const response = await apiClient.get<AdminStatsResponse>('/api/admin/stats');
+      const response = await apiClient.get<AdminStatsResponse>('/admin/stats');
       // The API wraps the data in a `data` property, so we extract it
       return response.data;
     } catch (error) {

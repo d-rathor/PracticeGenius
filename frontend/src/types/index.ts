@@ -1,9 +1,18 @@
+import type { NextPage } from 'next';
+import type { ReactElement, ReactNode } from 'react';
+
+// Layout types
+export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+
 // User types
 export interface User {
   id: string;
   name: string;
   email: string;
   role: 'admin' | 'user';
+  status?: 'active' | 'inactive' | 'suspended';
   activeSubscription?: Subscription;
   downloadHistory?: DownloadHistoryItem[];
   createdAt: string;
@@ -17,7 +26,8 @@ export interface DownloadHistoryItem {
 
 // Worksheet types
 export interface Worksheet {
-  id: string;
+  _id: string; 
+  id: string; 
   title: string;
   description: string;
   subject: string;
@@ -42,16 +52,33 @@ export interface WorksheetFilters {
 }
 
 // Subscription types
-import type { SubscriptionPlan as SP } from './types'; // Import for local use
-export type { SubscriptionPlan } from './types'; // Re-export from types.ts
+export interface SubscriptionPlan {
+  _id: string;
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  interval: 'month' | 'year';
+  stripePriceId: {
+    monthly: string;
+    yearly: string;
+  };
+  features: string[];
+  downloadLimit: number;
+  isActive: boolean;
+  stripeProductId?: string;
+}
 
 export interface Subscription {
+  _id: string;
   id: string;
   user: string | User;
-  plan: string | SP;
-  status: 'active' | 'canceled' | 'expired';
+  plan: SubscriptionPlan | string;
+  status: 'active' | 'canceled' | 'expired' | 'incomplete' | 'past_due' | 'pending_cancellation';
   startDate: string;
-  endDate: string;
+  currentPeriodEnd: string;
+  cancellation_effective_date?: number;
   paymentMethod: string;
   paymentId?: string;
   amount: number;

@@ -8,7 +8,7 @@ const {
   getSettingsByType,
   updateSettingsByType
 } = require('../controllers/settings.controller');
-const { auth, authorize } = require('../middleware/auth');
+const { protect: auth, authorize } = require('../middleware/auth');
 
 /**
  * @route   GET /api/settings/subscription

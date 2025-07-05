@@ -4,91 +4,56 @@ const subscriptionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'User is required']
+    required: true,
   },
   plan: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'SubscriptionPlan',
-    required: [true, 'Subscription plan is required']
+    required: true,
   },
-  status: {
+  stripeSubscriptionId: {
     type: String,
-    enum: ['active', 'canceled', 'expired'],
-    default: 'active'
+    unique: true,
+    sparse: true, // Required for unique fields that can be null
+  },
+  stripePriceId: {
+    type: String, // Not required, as free plans won't have this
   },
   startDate: {
     type: Date,
-    default: Date.now
   },
-  endDate: {
-    type: Date,
-    required: [true, 'End date is required']
-  },
-  paymentMethod: {
+  status: {
     type: String,
-    required: [true, 'Payment method is required']
+    required: true,
+    enum: [
+      'trialing',
+      'active',
+      'past_due',
+      'canceled',
+      'incomplete',
+      'pending_cancellation',
+    ],
+    // 'trialing': The subscription is in a trial period.
+    // 'active': The subscription is paid and active. Also used for the Free plan.
+    // 'past_due': Payment has failed.
+    // 'canceled': The subscription has been canceled.
+    // 'incomplete': The initial payment attempt failed.
+    // 'pending_cancellation': The user has requested to cancel, will be 'canceled' at period end.
   },
-  paymentId: {
-    type: String
+  currentPeriodEnd: {
+    type: Date, // Not required, as free plans do not have an end date
   },
-  amount: {
-    type: Number,
-    required: [true, 'Amount is required']
+  cancellation_effective_date: {
+    type: Date, // Stores when a pending cancellation will take effect
   },
-  currency: {
-    type: String,
-    default: 'USD'
-  },
-  autoRenew: {
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
-// Virtual for checking if subscription is active
+// Add a virtual to check if the subscription is currently active
 subscriptionSchema.virtual('isActive').get(function() {
-  return this.status === 'active' && this.endDate > new Date();
+  return this.status === 'active' || this.status === 'trialing';
 });
-
-// Virtual for days remaining
-subscriptionSchema.virtual('daysRemaining').get(function() {
-  if (this.status !== 'active') return 0;
-  
-  const now = new Date();
-  const end = new Date(this.endDate);
-  
-  if (end <= now) return 0;
-  
-  const diffTime = Math.abs(end - now);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  return diffDays;
-});
-
-// Method to check if subscription is about to expire (within 7 days)
-subscriptionSchema.methods.isAboutToExpire = function() {
-  if (this.status !== 'active') return false;
-  
-  const now = new Date();
-  const end = new Date(this.endDate);
-  
-  if (end <= now) return false;
-  
-  const diffTime = Math.abs(end - now);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  return diffDays <= 7;
-};
 
 const Subscription = mongoose.model('Subscription', subscriptionSchema);
 

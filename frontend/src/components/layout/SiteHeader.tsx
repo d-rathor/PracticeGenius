@@ -12,7 +12,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuthContext();
+  const { user, isAuthenticated } = useAuthContext();
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -88,7 +88,13 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
           </nav>
           <div className="hidden md:block">
             {isAuthenticated ? (
-              <div className="relative" ref={dropdownRef}>
+              <div className="flex items-center space-x-4">
+                {user && (
+                  <span className="text-gray-700 font-medium">
+                    Welcome, {user.name || user.email}
+                  </span>
+                )}
+                <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={toggleDropdown}
                   className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded transition duration-300 flex items-center"
@@ -114,6 +120,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             ) : (
               <div className="flex space-x-4">

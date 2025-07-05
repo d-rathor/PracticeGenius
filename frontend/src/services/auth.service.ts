@@ -34,7 +34,7 @@ const AuthService = {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/api/auth/login', credentials);
+      const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
       
       // Store token in localStorage (client-side only)
       if (typeof window !== 'undefined' && response.token) {
@@ -61,7 +61,7 @@ const AuthService = {
    * @returns AuthResponse with token and user data
    */
   async register(userData: RegisterData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/api/auth/register', userData);
+    const response = await apiClient.post<AuthResponse>('/auth/register', userData);
     
     // Store token in localStorage (client-side only)
     if (typeof window !== 'undefined' && response.token) {
@@ -76,7 +76,7 @@ const AuthService = {
    * @returns User profile data
    */
   async getProfile(): Promise<ApiResponse<User>> { // Assuming /api/auth/me returns ApiResponse<User>
-    const response = await apiClient.get<ApiResponse<User>>('/api/auth/me');
+    const response = await apiClient.get<ApiResponse<User>>('/auth/me');
     return response;
   },
   
@@ -86,7 +86,7 @@ const AuthService = {
    * @returns AuthResponse with updated user data
    */
   async updateProfile(profileData: Partial<User>): Promise<ApiResponse<User>> {
-    const response = await apiClient.put<ApiResponse<User>>('/api/auth/profile', profileData);
+    const response = await apiClient.put<ApiResponse<User>>('/auth/profile', profileData);
     // Optionally, update local user data if the API returns the full user object
     // and if you're managing user state globally (e.g., in a context or store)
     return response;
@@ -99,7 +99,7 @@ const AuthService = {
    */
   async changePassword(passwordData: ChangePasswordData): Promise<ApiResponse<{ message?: string; user?: User }>> {
     try {
-      const response = await apiClient.put<ApiResponse<{ message?: string; user?: User }>>('/api/auth/password', passwordData);
+      const response = await apiClient.put<ApiResponse<{ message?: string; user?: User }>>('/auth/password', passwordData);
       return response;
     } catch (error: any) {
       // Gracefully handle API errors by returning a standard response object

@@ -1,6 +1,6 @@
 import apiClient from '@/lib/api';
 import { AxiosResponse } from 'axios';
-import { User } from '@/types/types';
+import { User } from '@/types';
 
 // This interface should match the structure of a single worksheet
 export interface Worksheet {
@@ -22,7 +22,7 @@ export interface UserWorksheetLogEntry {
 const getMyDownloadedWorksheets = async (): Promise<UserWorksheetLogEntry[]> => {
   try {
     // Explicitly type the response data
-    const response: AxiosResponse<UserWorksheetLogEntry[]> = await apiClient.get('/api/users/me/downloaded-worksheets');
+    const response: AxiosResponse<UserWorksheetLogEntry[]> = await apiClient.get('/users/me/downloaded-worksheets');
     // Return the data from the response, or an empty array as a fallback
     return response.data || [];
   } catch (error) {
@@ -34,7 +34,7 @@ const getMyDownloadedWorksheets = async (): Promise<UserWorksheetLogEntry[]> => 
 
 const getUsers = async (): Promise<User[]> => {
   try {
-    const response: AxiosResponse<User[]> = await apiClient.get('/api/users');
+    const response: AxiosResponse<User[]> = await apiClient.get('/users');
     return response.data || [];
   } catch (error) {
     console.error('Error fetching users in UserService:', error);
@@ -44,7 +44,7 @@ const getUsers = async (): Promise<User[]> => {
 
 const deleteUser = async (userId: string): Promise<void> => {
   try {
-    await apiClient.delete(`/api/users/${userId}`);
+    await apiClient.delete(`/users/${userId}`);
   } catch (error) {
     console.error(`Error deleting user ${userId} in UserService:`, error);
     throw error;

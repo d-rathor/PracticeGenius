@@ -1,22 +1,6 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
-
-// User type definition
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'user';
-  activeSubscription?: { // Optional to prevent build errors if not immediately available
-    id?: string; // Assuming an ID might be useful
-    plan?: {
-      id?: string; // Assuming an ID might be useful
-      name?: 'Free' | 'Essential' | 'Premium';
-      // Add other plan properties if they exist and are used, e.g., downloadLimit
-    };
-    // Add other subscription properties if they exist, e.g., status, endDate
-  };
-}
+import { User } from '@/types'; // Import the canonical User type
 
 // Auth context state
 interface AuthContextState {
@@ -40,38 +24,38 @@ const AuthContext = createContext<AuthContextState>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  
+
   useEffect(() => {
-    // Check if we have a token in localStorage
+    // This effect runs once on mount to hydrate auth state from localStorage
     const token = localStorage.getItem('practicegenius_token');
     const userStr = localStorage.getItem('user');
-    
+
     if (token && userStr) {
       try {
         const userData = JSON.parse(userStr);
         setUser(userData);
-        setIsAuthenticated(true);
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error('Error parsing user data from localStorage:', error);
+        // Clear potentially corrupt data
         localStorage.removeItem('user');
         localStorage.removeItem('practicegenius_token');
+        setUser(null);
       }
     }
-    
     setIsLoading(false);
   }, []);
-  
-  // Check if user is admin
+
+  // Derived state is more robust and prevents sync issues
+  const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
-  // Context value
-  const contextValue = {
+  // Memoize the context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(() => ({
     user,
     isAuthenticated,
     isLoading,
     isAdmin,
-  };
+  }), [user, isLoading]);
 
   return (
     <AuthContext.Provider value={contextValue}>

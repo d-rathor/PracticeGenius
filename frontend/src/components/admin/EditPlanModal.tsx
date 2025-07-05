@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SubscriptionPlan } from '@/types/types';
+import { SubscriptionPlan } from '@/types';
 
 interface EditPlanModalProps {
   isOpen: boolean;
@@ -10,18 +10,18 @@ interface EditPlanModalProps {
 
 const EditPlanModal: React.FC<EditPlanModalProps> = ({ isOpen, onClose, plan, onSave }) => {
   const [name, setName] = useState('');
-  const [monthlyPrice, setMonthlyPrice] = useState(0);
+  const [price, setPrice] = useState(0);
   const [features, setFeatures] = useState(''); // Comma-separated string for simplicity
 
   useEffect(() => {
     if (plan) {
       setName(plan.name);
-      setMonthlyPrice(plan.price.monthly);
+      setPrice(plan.price);
       setFeatures(plan.features.join(', '));
     } else {
       // Reset form if no plan is provided (e.g., for a 'create' mode later)
       setName('');
-      setMonthlyPrice(0);
+      setPrice(0);
       setFeatures('');
     }
   }, [plan]);
@@ -30,13 +30,12 @@ const EditPlanModal: React.FC<EditPlanModalProps> = ({ isOpen, onClose, plan, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!plan) return; // Should not happen due to the check above, but for type safety
+
     const updatedPlanData: SubscriptionPlan = {
       ...plan,
       name,
-      price: { 
-        monthly: Number(monthlyPrice),
-        yearly: plan.price.yearly // Preserve original yearly price
-      },
+      price: Number(price),
       features: features.split(',').map(f => f.trim()).filter(f => f !== ''),
     };
     onSave(updatedPlanData);
@@ -59,12 +58,12 @@ const EditPlanModal: React.FC<EditPlanModalProps> = ({ isOpen, onClose, plan, on
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="planMonthlyPrice" className="block text-sm font-medium text-gray-700 mb-1">Monthly Price</label>
+            <label htmlFor="planPrice" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
             <input 
               type="number" 
-              id="planMonthlyPrice" 
-              value={monthlyPrice} 
-              onChange={(e) => setMonthlyPrice(Number(e.target.value))} 
+              id="planPrice" 
+              value={price} 
+              onChange={(e) => setPrice(Number(e.target.value))} 
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
               min="0"

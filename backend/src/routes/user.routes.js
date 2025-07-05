@@ -9,7 +9,7 @@ const {
   getRecentUsers,
   getMyDownloadedWorksheets // Added for user's unique downloaded worksheets list
 } = require('../controllers/user.controller');
-const { auth, authorize } = require('../middleware/auth');
+const { protect: auth, authorize } = require('../middleware/auth');
 
 /**
  * @route   GET /api/users

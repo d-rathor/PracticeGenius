@@ -1,98 +1,122 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuthContext } from './AuthContext';
-import { SubscriptionService } from '../services';
-import { Subscription, SubscriptionPlan } from '../types';
-import { useApi } from '../hooks';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import toast from 'react-hot-toast';
+import { Subscription, SubscriptionPlan } from '@/types';
+import SubscriptionService from '@/services/subscription.service';
+import { useAuthContext } from '@/contexts/AuthContext';
 
-// Subscription context state
 interface SubscriptionContextState {
   currentSubscription: Subscription | null;
   subscriptionPlans: SubscriptionPlan[];
   loading: boolean;
   error: string | null;
-  refreshSubscription: () => Promise<void>;
+  verifyPaymentSession: (sessionId: string) => Promise<Subscription | null>;
+  cancelActiveSubscription: () => Promise<void>;
+  refetchSubscription: () => void;
 }
 
-// Create context with default values
-const SubscriptionContext = createContext<SubscriptionContextState>({
-  currentSubscription: null,
-  subscriptionPlans: [],
-  loading: false,
-  error: null,
-  refreshSubscription: async () => {},
-});
+const SubscriptionContext = createContext<SubscriptionContextState | undefined>(undefined);
 
-/**
- * Subscription context provider component
- */
-export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, user } = useAuthContext();
+export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useAuthContext();
+  const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
-  
-  // Use custom hook for API calls
-  const {
-    data: currentSubscription,
-    loading,
-    error,
-    execute
-  } = useApi<Subscription | null>(null);
-  
-  // Fetch subscription data when authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchSubscriptionData();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSubscriptionData = useCallback(async () => {
+    if (!isAuthenticated) {
+      setCurrentSubscription(null);
+      setSubscriptionPlans([]);
+      setLoading(false);
+      return;
     }
-  }, [isAuthenticated, user]);
-  
-  // Fetch subscription data
-  const fetchSubscriptionData = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      // Fetch current subscription
-      execute(SubscriptionService.getCurrentSubscription());
-      
-      // Fetch subscription plans
       const plans = await SubscriptionService.getSubscriptionPlans();
-      setSubscriptionPlans(plans);
-    } catch (error) {
-      console.error('Error fetching subscription data:', error);
+      const subscription = await SubscriptionService.getCurrentSubscription();
+
+      if (Array.isArray(plans)) {
+        setSubscriptionPlans(plans);
+      } else {
+        console.error('SubscriptionContext Error: Data received for subscription plans is not an array. See previous log from service for details. Setting empty array to prevent crash.', plans);
+        setSubscriptionPlans([]);
+      }
+      
+      setCurrentSubscription(subscription);
+    } catch (err: any) {
+      console.error('Failed to fetch subscription data:', err);
+      setError(err.message || 'An error occurred while fetching subscription data.');
+    } finally {
+      setLoading(false);
     }
-  };
-  
-  // Refresh subscription data
-  const refreshSubscription = async () => {
-    if (isAuthenticated) {
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchSubscriptionData();
+  }, [fetchSubscriptionData]);
+
+  const verifyPaymentSession = useCallback(
+    async (sessionId: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const subscription = await SubscriptionService.verifyPaymentSession(sessionId);
+        if (subscription) {
+          setCurrentSubscription(subscription);
+        }
+        return subscription;
+      } catch (err: any) {
+        console.error('Payment verification failed:', err);
+        setError(err.message || 'An error occurred during payment verification.');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const cancelActiveSubscription = useCallback(async () => {
+    if (!currentSubscription) {
+      toast.error('No active subscription to cancel.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await SubscriptionService.cancelPaidSubscription();
+      toast.success('Your subscription will be canceled at the end of the current billing period.');
+      // Refetch data to get the updated subscription status
       await fetchSubscriptionData();
+    } catch (err: any) {
+      console.error('Failed to cancel subscription:', err);
+      const errorMessage = (err as any)?.response?.data?.error || 'An error occurred while canceling the subscription.';
+      toast.error(errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-  };
-  
-  // Context value
+  }, [currentSubscription, fetchSubscriptionData]);
+
+
   const value = {
-    currentSubscription: currentSubscription ?? null, // Ensure it's always Subscription | null (not undefined)
+    currentSubscription,
     subscriptionPlans,
     loading,
     error,
-    refreshSubscription
+    verifyPaymentSession,
+    cancelActiveSubscription,
+    refetchSubscription: fetchSubscriptionData,
   };
-  
-  return (
-    <SubscriptionContext.Provider value={value}>
-      {children}
-    </SubscriptionContext.Provider>
-  );
-}
 
-/**
- * Custom hook to use subscription context
- * @returns Subscription context state
- */
-export function useSubscription() {
+  return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;
+};
+
+export const useSubscription = (): SubscriptionContextState => {
   const context = useContext(SubscriptionContext);
-  
   if (context === undefined) {
     throw new Error('useSubscription must be used within a SubscriptionProvider');
   }
-  
   return context;
-}
-
-export default SubscriptionContext;
+};

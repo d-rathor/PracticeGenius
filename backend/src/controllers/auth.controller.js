@@ -1,4 +1,6 @@
 const User = require('../models/user.model');
+const Subscription = require('../models/subscription.model');
+const SubscriptionPlan = require('../models/subscription-plan.model');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/async-handler');
 
@@ -24,8 +26,28 @@ exports.register = asyncHandler(async (req, res) => {
     role: 'user' // Default role is user
   });
 
-  // Generate token
-  const token = user.generateAuthToken();
+  // Assign free subscription plan to the new user
+  const freePlan = await SubscriptionPlan.findOne({ name: 'Free' });
+  if (!freePlan) {
+    // This is a server configuration error, so we throw a 500
+    throw new ApiError('Free subscription plan not found. Please contact support.', 500);
+  }
+
+  const subscription = await Subscription.create({
+    user: user._id,
+    plan: freePlan._id,
+    status: 'active',
+  });
+
+  // IMPORTANT: Link the new subscription to the user record
+  user.activeSubscription = subscription._id;
+  await user.save();
+
+  // Refetch the user to ensure all updates are loaded before generating the token
+  const updatedUser = await User.findById(user._id);
+
+  // Generate token with the fully updated user object
+  const token = updatedUser.generateAuthToken();
 
   res.status(201).json({
     success: true,
