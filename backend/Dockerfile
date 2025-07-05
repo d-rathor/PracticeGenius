@@ -28,4 +28,4 @@ EXPOSE 8080
 
 # Define the command to run the application.
 # This uses the 'src/server.js' entrypoint as defined in your package.json.
-CMD [ "node", "server.js" ]
+CMD [ "node", "src/server.js" ]
