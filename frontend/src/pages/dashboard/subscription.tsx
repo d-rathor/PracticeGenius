@@ -57,25 +57,38 @@ const SubscriptionPage: NextPageWithLayout = () => {
     const toastId = toast.loading('Updating your plan...');
     try {
       const response = await SubscriptionService.createCheckoutSession(planId);
+      console.log('[handleSwitchPlan] Raw response from service:', response);
 
       // Handle direct upgrade/downgrade
       if (response.upgraded) {
-        toast.success('Your plan has been updated successfully!', { id: toastId });
+        console.log('[onSuccess] Plan upgraded directly.');
+        toast.success('Your plan has been upgraded successfully!', { id: toastId });
         await refetchSubscription();
       } 
       // Handle new subscription checkout
       else if (response.sessionId) {
-        toast.dismiss(toastId);
-        const stripe = await stripePromise;
+        console.log(`[onSuccess] Received sessionId: ${response.sessionId}. Loading Stripe...`);
+        const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+        console.log('[onSuccess] Stripe Publishable Key:', stripeKey);
+
+        if (!stripeKey) {
+          console.error('[onSuccess] Stripe Publishable Key is missing!');
+          toast.error('Client configuration error. Please contact support.');
+          return;
+        }
+        const stripe = await loadStripe(stripeKey);
         if (stripe) {
+          console.log('[onSuccess] Stripe loaded. Redirecting to checkout...');
           await stripe.redirectToCheckout({ sessionId: response.sessionId });
         } else {
-          toast.error('Could not connect to payment provider.');
+          console.error('[onSuccess] Failed to load Stripe.js.');
+          toast.error('Could not connect to payment provider. Please try again.');
         }
       } 
       // Handle unexpected response
       else {
-        throw new Error('Invalid response from server.');
+        console.warn('[onSuccess] Received unexpected data structure:', response);
+        toast.error('An unexpected error occurred. Please try again.');
       }
     } catch (err: any) {
       toast.error(err.message || 'An error occurred while processing your request.', { id: toastId });
