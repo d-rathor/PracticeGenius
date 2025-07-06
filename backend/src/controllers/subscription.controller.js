@@ -471,7 +471,12 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
       cancel_url: `${process.env.CLIENT_URL}/dashboard/subscription`,
     });
 
-    return res.json({ success: true, data: { sessionId: session.id } });
+    console.log(`[STRIPE_SESSION] Successfully created session ${session.id}.`);
+    console.log('[RESPONSE] Preparing to send session ID to frontend.');
+
+    res.json({ success: true, data: { sessionId: session.id } });
+
+    console.log('[RESPONSE] Session ID sent to frontend.');
   } catch (error) {
     console.error('[STRIPE_ERROR] Failed to create checkout session:', error);
     throw new ApiError('Could not create payment session. Please check server logs.', 500);
