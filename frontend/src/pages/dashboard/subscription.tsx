@@ -11,7 +11,7 @@ import PlanGrid from '@/components/dashboard/PlanGrid';
 import SubscriptionService from '@/services/subscription.service';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+
 
 const SubscriptionPage: NextPageWithLayout = () => {
   const { 
