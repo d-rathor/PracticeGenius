@@ -375,13 +375,68 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
       500
     );
   }
-  if (plan.price === 0) {
-    throw new ApiError('Cannot create a checkout session for a free plan.', 400);
-  }
 
   const user = await User.findById(userId);
   let stripeCustomerId = user.stripeCustomerId;
 
+  // Check for an existing active subscription to perform an upgrade/downgrade
+  const existingSubscription = await Subscription.findOne({
+    user: userId,
+    status: { $in: ['active', 'pending_cancellation'] },
+  });
+
+  if (existingSubscription && existingSubscription.stripeSubscriptionId) {
+    console.log(`[UPGRADE] Found active subscription ${existingSubscription.stripeSubscriptionId} for user ${userId}. Upgrading plan.`);
+    const stripeSubscription = await stripe.subscriptions.retrieve(existingSubscription.stripeSubscriptionId);
+
+    const updatedStripeSubscription = await stripe.subscriptions.update(existingSubscription.stripeSubscriptionId, {
+      cancel_at_period_end: false, // Ensure it doesn't cancel if it was pending cancellation
+      items: [{
+        id: stripeSubscription.items.data[0].id, // Get the ID of the first subscription item
+        price: plan.stripePriceId.monthly, // The new price ID
+      }],
+      proration_behavior: 'create_prorations', // This will handle billing adjustments
+    });
+
+    // --- FIX: Update local DB immediately to prevent race condition ---
+    const newStripePriceId = updatedStripeSubscription.items.data[0].price.id;
+    const newPlan = await SubscriptionPlan.findOne({
+      $or: [{ 'stripePriceId.monthly': newStripePriceId }, { 'stripePriceId.yearly': newStripePriceId }],
+    });
+
+    if (newPlan) {
+      const updatePayload = {
+        plan: newPlan._id,
+        stripePriceId: newStripePriceId,
+        status: updatedStripeSubscription.status,
+      };
+
+      if (updatedStripeSubscription.start_date) {
+        updatePayload.startDate = new Date(updatedStripeSubscription.start_date * 1000);
+      }
+      if (updatedStripeSubscription.current_period_end) {
+        updatePayload.currentPeriodEnd = new Date(updatedStripeSubscription.current_period_end * 1000);
+      }
+
+      await Subscription.findOneAndUpdate(
+        { user: userId, stripeSubscriptionId: existingSubscription.stripeSubscriptionId },
+        updatePayload
+      );
+      console.log(`[UPGRADE_SUCCESS] Local DB updated for user ${userId} to plan ${newPlan.name}.`);
+    } else {
+      console.error(`[UPGRADE_ERROR] Could not find local plan for new Stripe Price ID: ${newStripePriceId}. Webhook will need to sync.`);
+    }
+    // --- END FIX ---
+
+    return res.json({
+      success: true,
+      data: { upgraded: true },
+      message: 'Subscription updated successfully.',
+    });
+  }
+
+  // If no active subscription, proceed to create a new one via Checkout
+  console.log(`[NEW_SUB] No active subscription found for user ${userId}. Creating new checkout session.`);
   if (!stripeCustomerId) {
     const customer = await stripe.customers.create({
       email: user.email,
@@ -392,7 +447,6 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(userId, { stripeCustomerId });
   }
 
-  // Default to the monthly price. A future update could allow selecting yearly.
   const priceId = plan.stripePriceId.monthly;
 
   const session = await stripe.checkout.sessions.create({

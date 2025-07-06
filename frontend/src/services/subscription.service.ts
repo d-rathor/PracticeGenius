@@ -54,9 +54,12 @@ const SubscriptionService = {
   /**
    * Create a Stripe checkout session for a new subscription.
    */
-  async createCheckoutSession(planId: string): Promise<{ sessionId: string }> {
+  async createCheckoutSession(planId: string): Promise<{ sessionId?: string; upgraded?: boolean }> {
     try {
-      const response = await apiClient.post<ApiResponse<{ sessionId: string }>>('/subscriptions/create-checkout-session', { planId });
+      const response = await apiClient.post<ApiResponse<{ sessionId?: string; upgraded?: boolean }>>(
+        '/subscriptions/create-checkout-session',
+        { planId }
+      );
       return response.data;
     } catch (error) {
       console.error('Error creating checkout session:', error);

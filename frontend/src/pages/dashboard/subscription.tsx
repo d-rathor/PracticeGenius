@@ -54,16 +54,31 @@ const SubscriptionPage: NextPageWithLayout = () => {
   const handleSwitchPlan = async (planId: string) => {
     if (isSwitching || loading) return;
     setIsSwitching(true);
+    const toastId = toast.loading('Updating your plan...');
     try {
-      const { sessionId } = await SubscriptionService.createCheckoutSession(planId);
-      const stripe = await stripePromise;
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId });
-      } else {
-        toast.error('Could not connect to payment provider.');
+      const response = await SubscriptionService.createCheckoutSession(planId);
+
+      // Handle direct upgrade/downgrade
+      if (response.upgraded) {
+        toast.success('Your plan has been updated successfully!', { id: toastId });
+        await refetchSubscription();
+      } 
+      // Handle new subscription checkout
+      else if (response.sessionId) {
+        toast.dismiss(toastId);
+        const stripe = await stripePromise;
+        if (stripe) {
+          await stripe.redirectToCheckout({ sessionId: response.sessionId });
+        } else {
+          toast.error('Could not connect to payment provider.');
+        }
+      } 
+      // Handle unexpected response
+      else {
+        throw new Error('Invalid response from server.');
       }
     } catch (err: any) {
-      toast.error(err.message || 'An error occurred while preparing your upgrade.');
+      toast.error(err.message || 'An error occurred while processing your request.', { id: toastId });
     } finally {
       setIsSwitching(false);
     }

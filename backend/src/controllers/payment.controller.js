@@ -61,17 +61,23 @@ const createSubscriptionFromSession = async (session) => {
 
         // Use findOneAndUpdate with upsert to handle both new subscriptions and plan changes (e.g., Free -> Paid).
     // This ensures a single, authoritative subscription record per user.
+    const updatePayload = {
+      plan: plan._id,
+      stripeSubscriptionId,
+      stripePriceId,
+      status: subscription.status,
+    };
+
+    if (subscription.start_date) {
+      updatePayload.startDate = new Date(subscription.start_date * 1000);
+    }
+    if (subscription.current_period_end) {
+      updatePayload.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+    }
+
     await Subscription.findOneAndUpdate(
       { user: userId }, // Find the subscription by the user's ID
-      {
-        // Set or update the subscription fields
-        plan: plan._id,
-        stripeSubscriptionId,
-        stripePriceId,
-        status: subscription.status,
-        startDate: new Date(subscription.start_date * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      },
+      updatePayload,
       {
         new: true,    // Return the modified document
         upsert: true, // Create a new document if one doesn't exist for the user
@@ -89,12 +95,14 @@ const updateSubscriptionStatus = async (stripeSubscription) => {
   const { id, status, current_period_end } = stripeSubscription;
 
   try {
+    const updatePayload = { status };
+    if (current_period_end) {
+      updatePayload.endDate = new Date(current_period_end * 1000);
+    }
+
     const updatedSubscription = await Subscription.findOneAndUpdate(
       { stripeSubscriptionId: id },
-      {
-        status,
-        endDate: new Date(current_period_end * 1000),
-      },
+      updatePayload,
       { new: true }
     );
     if (updatedSubscription) {
