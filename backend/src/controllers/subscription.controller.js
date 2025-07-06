@@ -437,35 +437,45 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
 
   // If no active subscription, proceed to create a new one via Checkout
   console.log(`[NEW_SUB] No active subscription found for user ${userId}. Creating new checkout session.`);
-  if (!stripeCustomerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      name: user.name,
-      metadata: { userId: user._id.toString() },
+  try {
+    if (!stripeCustomerId) {
+      console.log('[STRIPE_CUSTOMER] Creating new Stripe customer...');
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+        metadata: { userId: user._id.toString() },
+      });
+      stripeCustomerId = customer.id;
+      await User.findByIdAndUpdate(userId, { stripeCustomerId });
+      console.log(`[STRIPE_CUSTOMER] Created Stripe customer ${stripeCustomerId}`);
+    }
+
+    const priceId = plan.stripePriceId.monthly;
+
+    console.log(`[STRIPE_SESSION] Creating session for plan ${plan.name} with price ${priceId}`);
+    console.log(`[STRIPE_SESSION] Client URL for redirect: ${process.env.CLIENT_URL}`);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      customer: stripeCustomerId,
+      line_items: [{
+        price: priceId,
+        quantity: 1,
+      }],
+      metadata: {
+        userId: userId.toString(),
+        planId: planId.toString(),
+      },
+      success_url: `${process.env.CLIENT_URL}/dashboard/subscription?payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/dashboard/subscription`,
     });
-    stripeCustomerId = customer.id;
-    await User.findByIdAndUpdate(userId, { stripeCustomerId });
+
+    return res.json({ success: true, data: { sessionId: session.id } });
+  } catch (error) {
+    console.error('[STRIPE_ERROR] Failed to create checkout session:', error);
+    throw new ApiError('Could not create payment session. Please check server logs.', 500);
   }
-
-  const priceId = plan.stripePriceId.monthly;
-
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    payment_method_types: ['card'],
-    customer: stripeCustomerId,
-    line_items: [{
-      price: priceId,
-      quantity: 1,
-    }],
-    metadata: {
-      userId: userId.toString(),
-      planId: planId.toString(),
-    },
-    success_url: `${process.env.CLIENT_URL}/dashboard/subscription?payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.CLIENT_URL}/dashboard/subscription`,
-  });
-
-  res.json({ success: true, data: { sessionId: session.id } });
 });
 
 const cancelActiveSubscription = asyncHandler(async (req, res, next) => {
