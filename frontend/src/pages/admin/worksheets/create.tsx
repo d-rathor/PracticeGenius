@@ -55,7 +55,7 @@ const CreateWorksheet: React.FC = () => {
     const fetchSubscriptionPlans = async () => {
       try {
         setIsLoading(true);
-        const data = await api.get('/api/subscriptions/plans');
+        const data = await api.get('/subscription-plans');
         console.log('Fetched subscription plans:', data);
         
         // Filter only active plans
