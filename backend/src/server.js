@@ -15,6 +15,8 @@ const allowedOrigins = [
   'https://practicegeniusv2.netlify.app', // Old Netlify frontend
   'https://practicegenius.online',        // New primary custom domain
   'https://www.practicegenius.online',    // New www custom domain
+  'https://practice4genius.com',          // New alias domain
+  'https://www.practice4genius.com',      // New www alias domain
   'http://localhost:3000',                // Local frontend development
   'http://localhost:3001',                // Local frontend development (alternative port)
 ];
