@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
+import Head from 'next/head';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { NextPageWithLayout } from '@/types'; // Corrected import path
@@ -17,12 +18,18 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
   const getLayout = Component.getLayout ?? ((page) => page);
 
   return (
-    <AuthProvider>
-      <SubscriptionProvider>
-        <main className={inter.className}>
-          {getLayout(<Component {...pageProps} />)}
-        </main>
-      </SubscriptionProvider>
-    </AuthProvider>
+    <>
+      <Head>
+        <title>PracticeGenius - Educational Worksheets</title>
+        <link rel="icon" href="/images/Logo7.png" />
+      </Head>
+      <AuthProvider>
+        <SubscriptionProvider>
+          <main className={inter.className}>
+            {getLayout(<Component {...pageProps} />)}
+          </main>
+        </SubscriptionProvider>
+      </AuthProvider>
+    </>
   );
 }
