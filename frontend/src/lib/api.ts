@@ -18,9 +18,11 @@ interface ApiRequestOptions extends RequestInit {
 // Ensure the API URL is correctly formatted with the /api path.
 // This handles cases where the env variable might be missing the path.
 // Use relative path for development to leverage Next.js proxy, and absolute for production.
-const finalApiUrl = process.env.NODE_ENV === 'production'
+const baseUrl = process.env.NODE_ENV === 'production'
   ? (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
-  : '/api'; // Use relative /api for dev
+  : ''; // No base URL needed for dev proxy
+
+const finalApiUrl = `${baseUrl}/api`;
 
 const api = {
   BACKEND_API_URL: finalApiUrl,
