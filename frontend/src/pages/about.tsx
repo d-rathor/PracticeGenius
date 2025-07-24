@@ -24,10 +24,10 @@ const AboutPage: NextPage = () => {
             {/* Right Column: Text Content */}
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-                About <span className="text-orange-500">Practice Genius</span>
+                About <span className="text-orange-500">Practice4Genius</span>
               </h1>
               <p className="mb-4 text-base md:text-lg">
-                PracticeGenius was founded by a mother who, like many parents, struggled to find quality worksheets for her school-going child. What began as a personal need turned into a mission — to make learning accessible, engaging, and effective for every child.
+                Practice4Genius was founded by a mother who, like many parents, struggled to find quality worksheets for her school-going child. What began as a personal need turned into a mission — to make learning accessible, engaging, and effective for every child.
               </p>
               <p className="mb-4 text-base md:text-lg">
                 PracticeGenius is built with that same spirit — to support parents, educators, and most importantly, students — by offering printable, subject-specific worksheets in Math, Science, and English for Grades 1 to 5. We offer flexible subscription plans, including free access, so that every family can find a learning path that works for them.
