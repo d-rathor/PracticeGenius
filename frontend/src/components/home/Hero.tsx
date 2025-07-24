@@ -10,13 +10,12 @@ interface HeroProps {
  */
 const Hero: React.FC<HeroProps> = () => {
   return (
-    <section className="bg-black text-white py-16">
+    <section className="bg-black text-white py-8">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between">
           <div className="md:w-1/2 mb-8 md:mb-0 pr-0 md:pr-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="text-orange-500">Quality Worksheets</span> for Your <br />
-              Child's Success
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              <span className="text-orange-500">Quality Worksheets</span> for Your Child's Success
             </h1>
             <p className="text-lg mb-6">
               Access premium educational worksheets for grades 1-5 in Math, Science, 
@@ -55,9 +54,9 @@ const Hero: React.FC<HeroProps> = () => {
           </div>
           
           <div className="md:w-1/2">
-            <div className="relative h-64 md:h-[400px] w-full rounded-lg overflow-hidden border-4 border-white">
+            <div className="relative h-56 md:h-[320px] w-full rounded-lg overflow-hidden border-4 border-white">
               <img 
-                src="/images/kids-writing.jpg" 
+                src="/images/Children2.png" 
                 alt="Children learning with worksheets" 
                 className="w-full h-full object-cover rounded"
                 loading="eager"

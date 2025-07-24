@@ -44,9 +44,9 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
   const containerClasses = fullWidth ? 'px-4 sm:px-6 lg:px-8' : 'container mx-auto px-4';
 
   return (
-    <header className="bg-white py-4 shadow-sm">
+    <header className="bg-white shadow-sm">
       <div className={containerClasses}>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center py-2">
           <div className="flex items-center">
             {showSidebarToggle && (
               <button
@@ -61,7 +61,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
               </button>
             )}
             <Link href="/" className="flex items-center">
-              <img src="/images/Logo6.png" alt="PracticeGenius Logo" className="h-20 w-auto" />
+              <img src="/images/Logo6.png" alt="PracticeGenius Logo" className="h-12 w-auto" />
             </Link>
           </div>
           <nav className="hidden md:flex space-x-8">
@@ -138,6 +138,24 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
             </svg>
           </button>
         </div>
+      </div>
+      {/* Subject Navigation */}
+      <div className="border-t border-gray-200">
+        <div className={containerClasses}>
+          <nav className="flex justify-center items-center space-x-6 sm:space-x-10 py-2 text-sm sm:text-lg">
+            <Link href="/worksheets?subject=Mathematics" className="text-lg font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300">
+              Maths
+            </Link>
+            <Link href="/worksheets?subject=Science" className="text-lg font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300">
+              Science
+            </Link>
+            <Link href="/worksheets?subject=English" className="text-lg font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300">
+              English
+            </Link>
+          </nav>
+        </div>
+      </div>
+      <div className={containerClasses}>
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4 px-4">
@@ -169,6 +187,9 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
               >
                 Help
               </Link>
+
+
+
               <div className="pt-4 border-t border-gray-200 flex flex-col space-y-4">
                 {isAuthenticated ? (
                   <>

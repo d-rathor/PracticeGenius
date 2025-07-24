@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import NewWorksheetFilter from '@/components/worksheets/NewWorksheetFilter';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import WorksheetService from '@/services/worksheet.service';
 import { FiFilter } from 'react-icons/fi';
 import { IoClose } from 'react-icons/io5';
@@ -38,6 +39,7 @@ const WorksheetsPage: React.FC = () => {
   
   // Mobile filter state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const loadWorksheets = async () => {
@@ -73,6 +75,16 @@ const WorksheetsPage: React.FC = () => {
 
     loadWorksheets();
   }, []);
+
+  // Sync subject from URL query param to state
+  useEffect(() => {
+    if (router.isReady) {
+      const { subject } = router.query;
+      if (subject && typeof subject === 'string') {
+        setSelectedSubject(subject);
+      }
+    }
+  }, [router.isReady, router.query]);
 
   useEffect(() => {
     let filtered = [...worksheets];

@@ -17,8 +17,10 @@ interface ApiRequestOptions extends RequestInit {
  */
 // Ensure the API URL is correctly formatted with the /api path.
 // This handles cases where the env variable might be missing the path.
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-const finalApiUrl = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
+// Use relative path for development to leverage Next.js proxy, and absolute for production.
+const finalApiUrl = process.env.NODE_ENV === 'production'
+  ? (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
+  : '/api'; // Use relative /api for dev
 
 const api = {
   BACKEND_API_URL: finalApiUrl,
@@ -98,9 +100,12 @@ const api = {
     }
 
     // Construct the URL
-    const base = this.BACKEND_API_URL.endsWith('/') ? this.BACKEND_API_URL.slice(0, -1) : this.BACKEND_API_URL;
-    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    let url = `${base}${path}`;
+    // In development, BACKEND_API_URL is '/api', so the URL is relative (e.g., /api/worksheets)
+    // In production, it's the full absolute URL.
+    const base = this.BACKEND_API_URL;
+    // Ensure the endpoint path doesn't start with a slash if the base already has one
+    const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    let url = `${base}/${path}`;
 
     // --- CACHE BUSTING IMPLEMENTATION ---
     const separator = url.includes('?') ? '&' : '?';

@@ -15,7 +15,7 @@ const AboutPage: NextPage = () => {
             {/* Left Column: Founder Image */}
             <div className="relative w-full h-80 md:h-[450px] rounded-lg overflow-hidden shadow-xl">
               <Image 
-                src="/images/qwe1-edited.jpg"
+                src="/images/AboutUs.png"
                 alt="Founder of Practice Genius"
                 layout="fill"
                 objectFit="cover" objectPosition="center 35%"
