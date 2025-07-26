@@ -6,7 +6,7 @@ interface TestimonialsProps {
 
 /**
  * Testimonials component for the home page
- * Displays parent testimonials about PracticeGenius
+ * Displays parent testimonials about Practice4Genius
  */
 const Testimonials: React.FC<TestimonialsProps> = () => {
   return (
@@ -18,7 +18,7 @@ const Testimonials: React.FC<TestimonialsProps> = () => {
           <div className="bg-gray-50 p-6 rounded-lg">
             <div className="border-l-4 border-orange-500 pl-4 mb-4">
               <p className="text-gray-700 italic mb-4">
-                "PracticeGenius has made learning fun for my daughter. The worksheets are engaging and easy to follow!"
+                "Practice4Genius has made learning fun for my daughter. The worksheets are engaging and easy to follow!"
               </p>
             </div>
             <div className="text-orange-500 font-medium">— Priya S., Mumbai</div>

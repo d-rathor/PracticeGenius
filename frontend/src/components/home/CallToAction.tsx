@@ -13,7 +13,7 @@ const CallToAction: React.FC<CallToActionProps> = () => {
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-3xl font-bold mb-4">Ready to enhance your child&apos;s education?</h2>
         <p className="text-lg mb-8 max-w-3xl mx-auto">
-          Join thousands of parents who trust PracticeGenius for quality educational resources.
+          Join thousands of parents who trust Practice4Genius for quality educational resources.
         </p>
         <div className="flex justify-center">
           <Link 

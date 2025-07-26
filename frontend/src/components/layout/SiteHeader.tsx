@@ -61,7 +61,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
               </button>
             )}
             <Link href="/" className="flex items-center">
-              <img src="/images/Logo6.png" alt="PracticeGenius Logo" className="h-12 w-auto" />
+              <img src="/images/Logo6.png" alt="Practice4Genius Logo" className="h-12 w-auto" />
             </Link>
           </div>
           <nav className="hidden md:flex space-x-8">

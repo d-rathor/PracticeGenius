@@ -28,7 +28,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div>
-              <h3 className="text-xl font-bold mb-4">PracticeGenius</h3>
+              <h3 className="text-xl font-bold mb-4">Practice4Genius</h3>
               <p className="text-gray-300 mb-4">
                 Educational worksheets designed to help students excel in their studies.
               </p>
@@ -83,7 +83,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {/* Copyright */}
           <div className="border-t border-gray-700 mt-8 pt-8 text-center">
             <p className="text-gray-300">
-              &copy; {new Date().getFullYear()} PracticeGenius. All rights reserved.
+              &copy; {new Date().getFullYear()} Practice4Genius. All rights reserved.
             </p>
           </div>
         </div>

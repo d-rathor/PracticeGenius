@@ -20,7 +20,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
   return (
     <>
       <Head>
-        <title>PracticeGenius - Educational Worksheets</title>
+        <title>Practice4Genius - Educational Worksheets</title>
         <link rel="icon" href="/images/Logo7.png" />
       </Head>
       <AuthProvider>

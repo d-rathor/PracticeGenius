@@ -38,8 +38,8 @@ const HomePage: NextPageWithLayout = () => {
   return (
     <>
       <Head>
-        <title>PracticeGenius - Educational Worksheets for Grades 1-5</title>
-        <meta name="description" content="PracticeGenius provides high-quality educational worksheets for students in grades 1-5. Help your child excel with our expertly crafted practice materials." />
+        <title>Practice4Genius - Educational Worksheets for Grades 1-5</title>
+        <meta name="description" content="Practice4Genius provides high-quality educational worksheets for students in grades 1-5. Help your child excel with our expertly crafted practice materials." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
