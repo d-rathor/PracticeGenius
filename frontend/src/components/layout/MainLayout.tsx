@@ -18,7 +18,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <SiteHeader />
       
       {/* Main Content */}
-      <main className="flex-grow">
+      <main className="flex-grow container mx-auto px-4">
         {children}
       </main>
       

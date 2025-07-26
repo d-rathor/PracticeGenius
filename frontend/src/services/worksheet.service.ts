@@ -1,21 +1,5 @@
 import api from '../lib/api';
-
-
-export interface Worksheet {
-  id: string;
-  title: string;
-  description: string;
-  subject: string;
-  grade: string;
-  subscriptionLevel: 'Free' | 'Essential' | 'Premium';
-  keywords: string[];
-  fileUrl: string;
-  thumbnailUrl: string;
-  createdBy: string;
-  downloads: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Worksheet } from '@/types/worksheet';
 
 // Define the structure of the API response when fetching multiple worksheets
 export interface WorksheetsApiResponse {
@@ -45,9 +29,9 @@ const WorksheetService = {
    * @param filters Optional filters for worksheets
    * @returns Array of worksheets and pagination data
    */
-  async getWorksheets(filters: WorksheetFilters = {}) {
+  async getWorksheets(filters: WorksheetFilters = {}): Promise<WorksheetsApiResponse> {
     const response = await api.get<WorksheetsApiResponse>('/worksheets', { params: filters });
-    return response.data;
+    return response;
   },
   
   /**
@@ -55,9 +39,9 @@ const WorksheetService = {
    * @param id Worksheet ID
    * @returns Worksheet data
    */
-  async getWorksheetById(id: string) {
-    const response = await api.get<Worksheet>(`/worksheets/${id}`);
-    return response;
+  async getWorksheetById(id: string): Promise<Worksheet> {
+    const response = await api.get<{ data: Worksheet }>(`/worksheets/${id}`);
+    return response.data; // The actual worksheet is in the 'data' property of the response
   },
   
   /**

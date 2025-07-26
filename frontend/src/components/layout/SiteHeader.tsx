@@ -142,15 +142,18 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ showSidebarToggle = false, onSi
       {/* Subject Navigation */}
       <div className="border-t border-gray-200">
         <div className={containerClasses}>
-          <nav className="flex justify-center items-center space-x-6 sm:space-x-10 py-2 text-sm sm:text-lg">
-            <Link href="/worksheets?subject=Mathematics" className="text-lg font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300">
+          <nav className="flex justify-center items-center space-x-4 sm:space-x-8 py-2 text-base sm:text-lg">
+            <Link href="/worksheets?subject=Mathematics" className="font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300 px-1 sm:px-2">
               Maths
             </Link>
-            <Link href="/worksheets?subject=Science" className="text-lg font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300">
+            <Link href="/worksheets?subject=Science" className="font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300 px-1 sm:px-2">
               Science
             </Link>
-            <Link href="/worksheets?subject=English" className="text-lg font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300">
+            <Link href="/worksheets?subject=English" className="font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300 px-1 sm:px-2">
               English
+            </Link>
+            <Link href="/worksheets/all" className="font-medium text-gray-600 hover:text-orange-500 transition-colors duration-300 px-1 sm:px-2">
+              All Worksheets
             </Link>
           </nav>
         </div>

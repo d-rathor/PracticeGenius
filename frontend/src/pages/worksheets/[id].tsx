@@ -8,26 +8,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import WorksheetService from '@/services/worksheet.service'; // Import WorksheetService
 import { Button } from '@/components/ui/Button'; // Assuming Button component exists and is styled
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
-
-interface Worksheet {
-  id: string;
-  title: string;
-  subject: string;
-  grade: string;
-  difficulty: string;
-  subscriptionLevel: 'Free' | 'Essential' | 'Premium';
-  description: string;
-  content: string;
-  downloadCount: number;
-  dateCreated: string;
-  previewUrl?: string; // This is the pre-signed URL for the preview image
-  // Add fields related to the downloadable file, assuming backend provides them:
-  fileKey?: string; 
-  fileUrl: string; // This is the B2 URL, not the pre-signed one for direct download by user
-  originalFilename?: string;
-  mimeType?: string;
-  fileSize?: number;
-}
+import { Worksheet } from '@/types/worksheet';
 
 const WorksheetDetailPage: React.FC = () => {
   const router = useRouter();
@@ -44,42 +25,21 @@ const WorksheetDetailPage: React.FC = () => {
   // Authentication state is now handled by useAuthContext
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || typeof id !== 'string') return;
 
     const fetchWorksheet = async () => {
       try {
         setIsLoading(true);
-
-        // Get token from localStorage to make an authenticated request if available
-        const token = localStorage.getItem('practicegenius_token');
-        const headers: HeadersInit = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/worksheets/${id}`;
-        console.log('Fetching worksheet from:', apiUrl, 'Authenticated:', !!token);
-
-        const response = await fetch(apiUrl, { headers });
-
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const responseData = await response.json();
-
-        // The actual worksheet data is nested in the 'data' property from our API
-        if (responseData && responseData.data) {
-          setWorksheet(responseData.data);
+        const worksheetData = await WorksheetService.getWorksheetById(id as string);
+        if (worksheetData) {
+          setWorksheet(worksheetData);
         } else {
-          // Fallback for cases where the structure might be flat (e.g., from a different source)
-          setWorksheet(responseData);
+          throw new Error('Worksheet not found.');
         }
-
-        setIsLoading(false);
       } catch (err) {
         console.error('Failed to fetch worksheet:', err);
         setError('Failed to load worksheet. Please try again later.');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -216,15 +176,15 @@ const WorksheetDetailPage: React.FC = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center mb-6">
-          <Link 
-            href="/worksheets" 
+          <button
+            onClick={() => router.back()}
             className="text-orange-500 hover:text-orange-600 mr-2 flex items-center"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Worksheets
-          </Link>
+          </button>
         </div>
 
         {isLoading ? (

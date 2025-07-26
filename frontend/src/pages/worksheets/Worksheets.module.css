@@ -1,0 +1,210 @@
+.container {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+}
+
+.mainTitle {
+  color: #F97316; /* Orange color from screenshot */
+  font-size: 2.25rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.title {
+  color: #F97316; /* Orange color from screenshot */
+  font-size: 2.25rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.subjectSection {
+  margin-bottom: 2rem;
+}
+
+.subjectSection h2 a {
+  color: #1976d2; /* Blue color from screenshot */
+  text-decoration: underline;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.subjectSection p {
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+.worksheetImageContainer {
+  margin-top: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.subjectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.subjectCard {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.subjectCard:hover {
+  transform: translateY(-5px);
+}
+
+.cardImagePlaceholder {
+  width: 100%;
+  height: 150px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.button {
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: #005bb5;
+}
+
+.subjectContainer {
+  padding: 2rem;
+}
+
+.grades {
+  margin: 2rem 0;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.gradeLink {
+  cursor: pointer;
+  color: #0070f3;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid #0070f3;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.gradeLink:hover {
+  background-color: #e6f2ff;
+}
+
+.subjectTitle {
+  color: #F97316; /* Orange color */
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.subjectDescription {
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.listHeader {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.gradeList, .topicList {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gradeList {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.topicList {
+  grid-template-columns: 1fr;
+}
+
+.gradeList a, .topicList a {
+  color: #1976d2;
+  text-decoration: underline;
+  font-size: 1rem;
+}
+
+.gradeList a:hover, .topicList a:hover {
+  color: #0d47a1;
+}
+
+.activeGrade {
+  color: white !important;
+  background-color: #1976d2;
+  border-color: #1976d2;
+}
+
+.worksheetList {
+  margin-top: 2rem;
+}
+
+.worksheetList ul {
+  list-style: none;
+  padding: 0;
+}
+
+.worksheetList li {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.worksheetList li:hover {
+  background-color: #f0f0f0;
+}
+
+.worksheetList a {
+  color: #1976d2; /* Standard link blue */
+  text-decoration: underline;
+}
+
+.worksheetList a:hover {
+  color: #0d47a1; /* Darker blue on hover */
+}
+
+.imagePlaceholder {
+  margin-top: 2rem;
+  width: 100%;
+  height: 300px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+}
