@@ -57,7 +57,7 @@ const SubscriptionService = {
   async createCheckoutSession(planId: string): Promise<{ sessionId?: string; upgraded?: boolean }> {
     try {
       const response = await apiClient.post<ApiResponse<{ sessionId?: string; upgraded?: boolean }>>(
-        '/subscriptions/create-checkout-session',
+        '/subscriptions/switch-plan',
         { planId }
       );
       return response.data;
@@ -85,10 +85,26 @@ const SubscriptionService = {
    */
   async cancelPaidSubscription(): Promise<void> {
     try {
-      await apiClient.delete<ApiResponse<void>>('/subscriptions/current');
+      await apiClient.delete('/subscriptions/current');
     } catch (error) {
       console.error('Error canceling subscription:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Switch the user's current subscription to a new plan.
+   */
+  async switchPlan(planId: string): Promise<{ sessionId?: string; success?: boolean; message?: string }> {
+    try {
+      const response = await apiClient.post<{ sessionId?: string; success?: boolean; message?: string }>(
+        '/subscriptions/switch-plan',
+        { planId }
+      );
+      return response;
+    } catch (error) {
+      console.error('Error switching subscription plan:', error);
+      throw error; // Re-throw to be handled by the calling component
     }
   },
 

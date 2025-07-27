@@ -146,26 +146,12 @@ const WorksheetDetailPage: React.FC = () => {
         throw new Error('Download URL not provided by the server.');
       }
     } catch (err: any) {
-      // --- BEGIN NEW LOGS ---
-      console.log('[handleDownload] Caught error object (stringified with own props):', JSON.stringify(err, Object.getOwnPropertyNames(err)));
-      console.log('[handleDownload] err.response (raw):', err.response);
-      console.log('[handleDownload] err.response?.status (from raw response):', err.response?.status);
-      console.log('[handleDownload] err.status (direct property on error object):', err.status);
-      console.log('[handleDownload] err.data (parsed error data from API client):', err.data);
-      console.log('[handleDownload] err.message (direct property on error object):', err.message);
-      // --- END NEW LOGS ---
-
-      const apiMessage = err.data?.message || 'An error occurred.'; // Get message from our standardized error
-      const apiStatus = err.status; // Get status from our standardized error
-
-      if (apiStatus === 403) { 
-        console.log('[handleDownload] Detected 403 error using err.status. Opening subscription modal.');
-        // You can customize the message for the modal if needed, e.g. using apiMessage
-        setIsSubscriptionModalOpen(true); 
+      // Check the error message for subscription-related text
+      if (err.message && err.message.toLowerCase().includes('subscription')) {
+        setIsSubscriptionModalOpen(true);
       } else {
-        console.log(`[handleDownload] Error is not 403 (status from err.status: ${apiStatus}). Showing generic error message: ${apiMessage}`);
-        console.error('Download error details in [id].tsx:', err); 
-        setDownloadError(apiMessage); // Use the message from the API if available
+        console.error('Download error:', err);
+        setDownloadError(err.message || 'An unexpected error occurred during download.');
       }
     } finally {
       setIsDownloading(false);

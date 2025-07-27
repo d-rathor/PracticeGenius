@@ -105,7 +105,7 @@ const api = {
     }
 
     // Get the auth token from localStorage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('practicegenius_token') : null;
 
     // Set up headers
     const requestHeaders = new Headers(options.headers || {});

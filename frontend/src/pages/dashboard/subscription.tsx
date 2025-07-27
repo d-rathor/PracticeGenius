@@ -56,39 +56,32 @@ const SubscriptionPage: NextPageWithLayout = () => {
     setIsSwitching(true);
     const toastId = toast.loading('Updating your plan...');
     try {
-      const response = await SubscriptionService.createCheckoutSession(planId);
-      console.log('[handleSwitchPlan] Raw response from service:', response);
+      const response = await SubscriptionService.switchPlan(planId);
+      console.log('[handleSwitchPlan] Response from service:', response);
 
-      // Handle direct upgrade/downgrade
-      if (response.upgraded) {
-        console.log('[onSuccess] Plan upgraded directly.');
-        toast.success('Your plan has been upgraded successfully!', { id: toastId });
-        await refetchSubscription();
-      } 
-      // Handle new subscription checkout
-      else if (response.sessionId) {
-        console.log(`[onSuccess] Received sessionId: ${response.sessionId}. Loading Stripe...`);
+      // Case 1: A new checkout session was created (for new subscriptions).
+      if (response.sessionId) {
+        toast.loading('Redirecting to payment...', { id: toastId });
         const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-        console.log('[onSuccess] Stripe Publishable Key:', stripeKey);
-
         if (!stripeKey) {
-          console.error('[onSuccess] Stripe Publishable Key is missing!');
-          toast.error('Client configuration error. Please contact support.');
+          toast.error('Stripe configuration error. Please contact support.', { id: toastId });
           return;
         }
         const stripe = await loadStripe(stripeKey);
         if (stripe) {
-          console.log('[onSuccess] Stripe loaded. Redirecting to checkout...');
           await stripe.redirectToCheckout({ sessionId: response.sessionId });
         } else {
-          console.error('[onSuccess] Failed to load Stripe.js.');
-          toast.error('Could not connect to payment provider. Please try again.');
+          toast.error('Could not connect to payment provider.', { id: toastId });
         }
       } 
-      // Handle unexpected response
+      // Case 2: The plan was switched directly via the API (for existing subscriptions).
+      else if (response.success) {
+        toast.success(response.message || 'Your plan has been switched successfully!', { id: toastId });
+        await refetchSubscription();
+      } 
+      // Case 3: Handle unexpected response.
       else {
-        console.warn('[onSuccess] Received unexpected data structure:', response);
-        toast.error('An unexpected error occurred. Please try again.');
+        toast.error('An unexpected error occurred. Please try again.', { id: toastId });
       }
     } catch (err: any) {
       toast.error(err.message || 'An error occurred while processing your request.', { id: toastId });
