@@ -209,8 +209,8 @@ const generateWorksheet = catchAsync(async (req, res) => {
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // Add logo from Logo6.png (from frontend public folder)
-    const logoPath = path.join(__dirname, '../../../frontend/public/images/Logo6.png');
+    // Add logo from Logo6.png (from backend public folder)
+    const logoPath = path.join(__dirname, '../../public/images/Logo6.png');
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 380, 2, { 
         fit: [180, 110], // Further increased size while maintaining aspect ratio
