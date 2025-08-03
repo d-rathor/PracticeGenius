@@ -125,19 +125,41 @@ const api = {
     // Remove the custom 'params' from options before passing to fetch
     const { params, ...fetchOptions } = options;
 
+    // Set longer timeout for worksheet generation endpoints
+    const isWorksheetGeneration = url.includes('/worksheet-generator/generate');
+    const timeoutMs = isWorksheetGeneration ? 300000 : 30000; // 5 minutes for worksheets, 30 seconds for others
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     const finalOptions: RequestInit = {
       ...fetchOptions,
       headers: requestHeaders,
       body: processedBody as BodyInit | undefined,
+      signal: controller.signal,
     };
 
-    const response = await fetch(url, finalOptions);
+    try {
+      const response = await fetch(url, finalOptions);
+      clearTimeout(timeoutId); // Clear timeout on successful response
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-      throw new Error(errorData.message || 'Request failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(errorData.message || 'Request failed');
+      }
+
+      // Continue with existing response processing
+      return await this.handleResponse<T>(response);
+    } catch (error: any) {
+      clearTimeout(timeoutId); // Clear timeout on error
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try with fewer questions or disable images.');
+      }
+      throw error;
     }
+  },
 
+  async handleResponse<T>(response: Response): Promise<T> {
     // Handle cases where the response might be empty (e.g., 204 No Content)
     if (response.status === 204) {
       return {} as T;
@@ -148,8 +170,13 @@ const api = {
       return {} as T;
     }
 
-    return JSON.parse(responseText) as T;
-  },
+    try {
+      return JSON.parse(responseText) as T;
+    } catch (e) {
+      console.error('Failed to parse JSON response:', responseText);
+      throw new Error('Failed to parse server response.');
+    }
+  }
 };
 
 export default api;

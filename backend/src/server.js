@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -70,6 +71,7 @@ console.log('All routes mounted successfully');
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/worksheets', express.static(path.join(__dirname, '../worksheets')));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Root route

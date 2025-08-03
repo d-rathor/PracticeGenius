@@ -34,7 +34,7 @@ const nextConfig = {
       ? 'https://practicegenius-api.onrender.com' 
       : 'http://localhost:8080',
   },
-  // Add API proxy to forward requests to the backend server
+  // Add API proxy to forward requests to the backend server with extended timeout
   async rewrites() {
     return [
       {
@@ -42,6 +42,18 @@ const nextConfig = {
         destination: 'http://localhost:8080/api/:path*',
       },
     ];
+  },
+  // Configure server options for longer timeouts
+  serverRuntimeConfig: {
+    // Increase timeout for API requests (10 minutes)
+    timeout: 600000,
+  },
+  // Configure experimental features for better proxy handling
+  experimental: {
+    // Increase body size limit for large requests
+    isrMemoryCacheSize: 0,
+    // Better proxy timeout handling
+    proxyTimeout: 600000, // 10 minutes
   },
 };
 
