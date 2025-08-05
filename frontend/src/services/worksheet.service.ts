@@ -50,11 +50,8 @@ const WorksheetService = {
    * @returns Created worksheet
    */
   async createWorksheet(worksheetData: FormData) {
-    const response = await api.post<Worksheet>('/worksheets', worksheetData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+    const response = await api.post<Worksheet>('/worksheets', worksheetData);
+    // Note: Don't set Content-Type manually for FormData - browser sets it automatically with boundary
     return response;
   },
   
@@ -65,11 +62,8 @@ const WorksheetService = {
    * @returns Updated worksheet
    */
   async updateWorksheet(id: string, worksheetData: FormData) {
-    const response = await api.put<Worksheet>(`/worksheets/${id}`, worksheetData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+    const response = await api.put<Worksheet>(`/worksheets/${id}`, worksheetData);
+    // Note: Don't set Content-Type manually for FormData - browser sets it automatically with boundary
     return response;
   },
   
