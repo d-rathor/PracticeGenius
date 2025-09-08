@@ -116,7 +116,14 @@ const api = {
     let processedBody = options.body;
     // Set Content-Type for POST/PUT/PATCH if not already set and body is an object
     if (['POST', 'PUT', 'PATCH'].includes(options.method || '') && processedBody) {
-      if (!(processedBody instanceof FormData) && !requestHeaders.has('Content-Type')) {
+      // Important: Do NOT set Content-Type for FormData, browser will set it with boundary
+      if (processedBody instanceof FormData) {
+        // Remove Content-Type if it was manually set for FormData
+        if (requestHeaders.has('Content-Type')) {
+          requestHeaders.delete('Content-Type');
+        }
+      } else if (!requestHeaders.has('Content-Type')) {
+        // For non-FormData, set Content-Type to application/json
         requestHeaders.set('Content-Type', 'application/json');
         processedBody = JSON.stringify(processedBody);
       }

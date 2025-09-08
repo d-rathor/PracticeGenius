@@ -8,6 +8,8 @@ const paymentRoutes = require('./payment.routes.js');
 const subscriptionPlanRoutes = require('./subscription-plan.routes.js');
 const settingsRoutes = require('./settings.routes.js');
 const healthRoutes = require('./health.routes.js');
+const googleDriveRoutes = require('./googleDrive.routes.js');
+const localFolderRoutes = require('./localFolder.routes.js');
 
 const router = express.Router();
 
@@ -47,6 +49,8 @@ router.use('/subscriptions', subscriptionRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/subscription-plans', subscriptionPlanRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/google-drive', googleDriveRoutes);
+router.use('/local-folder', localFolderRoutes);
 
 // Handle 404 for API routes
 router.use((req, res) => {
