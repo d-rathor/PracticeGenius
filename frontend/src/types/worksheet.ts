@@ -1,5 +1,6 @@
 export interface Worksheet {
   id: string;
+  _id?: string; // Adding _id for MongoDB compatibility
   title: string;
   subject: string;
   grade: string;
@@ -15,4 +16,5 @@ export interface Worksheet {
   originalFilename?: string;
   mimeType?: string;
   fileSize?: number;
+  keywords?: string[]; // Adding keywords for tagging worksheets
 }

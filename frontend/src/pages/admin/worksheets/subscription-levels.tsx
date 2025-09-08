@@ -16,7 +16,7 @@ const SubscriptionLevelsPage: NextPage = () => {
   const [filters, setFilters] = useState({
     subject: '',
     grade: '',
-    subscriptionLevel: '',
+    subscriptionLevel: undefined as undefined | 'Free' | 'Essential' | 'Premium',
     search: ''
   });
 
@@ -49,7 +49,14 @@ const SubscriptionLevelsPage: NextPage = () => {
   // Handle filter changes
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'subscriptionLevel') {
+      // Handle subscriptionLevel separately to ensure type safety
+      const subscriptionValue = value === '' ? undefined : value as 'Free' | 'Essential' | 'Premium';
+      setFilters(prev => ({ ...prev, subscriptionLevel: subscriptionValue }));
+    } else {
+      setFilters(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Apply filters
@@ -63,7 +70,7 @@ const SubscriptionLevelsPage: NextPage = () => {
     setFilters({
       subject: '',
       grade: '',
-      subscriptionLevel: '',
+      subscriptionLevel: undefined,
       search: ''
     });
     // Fetch worksheets without filters
@@ -148,7 +155,7 @@ const SubscriptionLevelsPage: NextPage = () => {
                 </label>
                 <select
                   name="subscriptionLevel"
-                  value={filters.subscriptionLevel}
+                  value={filters.subscriptionLevel || ''}
                   onChange={handleFilterChange}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 >
@@ -204,8 +211,4 @@ const SubscriptionLevelsPage: NextPage = () => {
   );
 };
 
-SubscriptionLevelsPage.getLayout = (page: React.ReactElement) => {
-  return <AdminLayout>{page}</AdminLayout>;
-};
-
-export default withAuth(SubscriptionLevelsPage, ['admin']);
+export default withAuth(SubscriptionLevelsPage, { adminOnly: true });

@@ -17,10 +17,15 @@ const SubscriptionLevelEditor: React.FC<SubscriptionLevelEditorProps> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
 
+  // Get worksheet ID (handles both _id and id)
+  const getWorksheetId = (worksheet: Worksheet): string => {
+    return worksheet._id || worksheet.id;
+  };
+
   // Handle select all checkbox
   useEffect(() => {
     if (selectAll) {
-      setSelectedWorksheets(worksheets.map(worksheet => worksheet._id));
+      setSelectedWorksheets(worksheets.map(worksheet => getWorksheetId(worksheet)));
     } else if (selectedWorksheets.length === worksheets.length) {
       // If all are selected but selectAll is false, clear selection
       setSelectedWorksheets([]);
@@ -60,7 +65,7 @@ const SubscriptionLevelEditor: React.FC<SubscriptionLevelEditorProps> = ({
       
       // Update each selected worksheet
       const updatePromises = selectedWorksheets.map(worksheetId => {
-        const worksheet = worksheets.find(w => w._id === worksheetId);
+        const worksheet = worksheets.find(w => getWorksheetId(w) === worksheetId);
         if (!worksheet) return null;
         
         // Create FormData with updated subscription level
@@ -180,14 +185,14 @@ const SubscriptionLevelEditor: React.FC<SubscriptionLevelEditorProps> = ({
             ) : (
               worksheets.map((worksheet) => (
                 <tr 
-                  key={worksheet._id}
-                  className={selectedWorksheets.includes(worksheet._id) ? 'bg-blue-50' : ''}
+                  key={getWorksheetId(worksheet)}
+                  className={selectedWorksheets.includes(getWorksheetId(worksheet)) ? 'bg-blue-50' : ''}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
-                      checked={selectedWorksheets.includes(worksheet._id)}
-                      onChange={() => handleWorksheetSelect(worksheet._id)}
+                      checked={selectedWorksheets.includes(getWorksheetId(worksheet))}
+                      onChange={() => handleWorksheetSelect(getWorksheetId(worksheet))}
                       disabled={isUpdating}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />

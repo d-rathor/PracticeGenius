@@ -4,10 +4,9 @@ import { Worksheet } from '@/types/worksheet';
 // Define the structure of the API response when fetching multiple worksheets
 export interface WorksheetsApiResponse {
   data: Worksheet[];
-  // Add other pagination fields if your API returns them, e.g.:
-  // currentPage?: number;
-  // totalPages?: number;
-  // totalCount?: number;
+  total?: number;
+  currentPage?: number;
+  totalPages?: number;
 }
 
 export interface WorksheetFilters {

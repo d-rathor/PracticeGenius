@@ -22,7 +22,7 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
   const [filters, setFilters] = useState({
     subject: '',
     grade: '',
-    subscriptionLevel: '',
+    subscriptionLevel: undefined as undefined | 'Free' | 'Essential' | 'Premium',
     search: ''
   });
   
@@ -75,8 +75,8 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
       const subjects = Array.from(new Set(worksheetsData.map(w => w.subject).filter(Boolean)));
       const grades = Array.from(new Set(worksheetsData.map(w => w.grade).filter(Boolean)));
       
-      setAvailableSubjects(subjects as string[]);
-      setAvailableGrades(grades as string[]);
+      setAvailableSubjects(subjects.filter((s): s is string => s !== undefined));
+      setAvailableGrades(grades.filter((g): g is string => g !== undefined));
     } catch (err) {
       console.error('Error fetching filter options:', err);
     }
@@ -97,10 +97,15 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
     fetchFilterOptions();
   }, []);
   
+  // Get worksheet ID (handles both _id and id)
+  const getWorksheetId = (worksheet: Worksheet): string => {
+    return (worksheet._id || worksheet.id) as string;
+  };
+
   // Handle select all checkbox
   useEffect(() => {
     if (selectAll) {
-      setSelectedWorksheets(worksheets.map(worksheet => worksheet._id));
+      setSelectedWorksheets(worksheets.map(worksheet => getWorksheetId(worksheet)));
     } else if (selectedWorksheets.length === worksheets.length) {
       // If all are selected but selectAll is false, clear selection
       setSelectedWorksheets([]);
@@ -131,7 +136,14 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
   // Handle filter changes
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'subscriptionLevel') {
+      // Handle subscriptionLevel separately to ensure type safety
+      const subscriptionValue = value === '' ? undefined : value as 'Free' | 'Essential' | 'Premium';
+      setFilters(prev => ({ ...prev, subscriptionLevel: subscriptionValue }));
+    } else {
+      setFilters(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Apply filters
@@ -145,7 +157,7 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
     setFilters({
       subject: '',
       grade: '',
-      subscriptionLevel: '',
+      subscriptionLevel: undefined,
       search: ''
     });
     // Fetch worksheets without filters
@@ -164,7 +176,7 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
       
       // Update each selected worksheet
       const updatePromises = selectedWorksheets.map(worksheetId => {
-        const worksheet = worksheets.find(w => w._id === worksheetId);
+        const worksheet = worksheets.find(w => getWorksheetId(w) === worksheetId);
         if (!worksheet) return null;
         
         // Create FormData with updated subscription level
@@ -292,7 +304,7 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
                       </label>
                       <select
                         name="subscriptionLevel"
-                        value={filters.subscriptionLevel}
+                        value={filters.subscriptionLevel || ''}
                         onChange={handleFilterChange}
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md"
                       >
@@ -419,14 +431,14 @@ const BulkSubscriptionUpdatePage: NextPage = () => {
                         ) : (
                           worksheets.map((worksheet) => (
                             <tr 
-                              key={worksheet._id}
-                              className={selectedWorksheets.includes(worksheet._id) ? 'bg-orange-50' : ''}
+                              key={getWorksheetId(worksheet)}
+                              className={selectedWorksheets.includes(getWorksheetId(worksheet)) ? 'bg-orange-50' : ''}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <input
                                   type="checkbox"
-                                  checked={selectedWorksheets.includes(worksheet._id)}
-                                  onChange={() => handleWorksheetSelect(worksheet._id)}
+                                  checked={selectedWorksheets.includes(getWorksheetId(worksheet))}
+                                  onChange={() => handleWorksheetSelect(getWorksheetId(worksheet))}
                                   disabled={isUpdating}
                                   className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                                 />
