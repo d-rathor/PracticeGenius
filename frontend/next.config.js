@@ -50,8 +50,6 @@ const nextConfig = {
   },
   // Configure experimental features for better proxy handling
   experimental: {
-    // Increase body size limit for large requests
-    isrMemoryCacheSize: 0,
     // Better proxy timeout handling
     proxyTimeout: 600000, // 10 minutes
   },

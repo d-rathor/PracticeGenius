@@ -22,7 +22,9 @@ export interface WorksheetDslGenerationParams {
 export interface WorksheetDslGenerationResponse {
   success: boolean;
   downloadUrl: string;
+  answerKeyUrl?: string;
   worksheetPreviewUrl?: string;
+  answerKeyPreviewUrl?: string;
   message?: string;
   worksheetDsl?: WorksheetDSL;
 }
