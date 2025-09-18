@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "grade": "1",
+    "subject": "Maths",
+    "title": "Counting to 10"
+  },
+  "instructions": "Count the bugs and write the numbers (1–10) in the boxes.",
+  "layout": {
+    "type": "grid",
+    "rows": 2,
+    "cols": 5,
+    "show_answer_boxes": true,
+    "box_size": "medium",
+    "spacing": "normal"
+  },
+  "items": [
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "1",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "2",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "3",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "4",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "5",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "6",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "7",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "8",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "9",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "prompt": "Count the bugs",
+      "target_answer": "10",
+      "assets": [
+        {
+          "type": "icon",
+          "name": "bug",
+          "count": 10
+        }
+      ]
+    }
+  ],
+  "answer_key": true,
+  "branding": {
+    "logo": "PracticeGenius",
+    "theme": "orange-white-black",
+    "footer": "© PracticeGenius 2025"
+  }
+}

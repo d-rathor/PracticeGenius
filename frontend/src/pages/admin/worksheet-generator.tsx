@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { worksheetGeneratorService, WorksheetGenerationParams } from '@/services/worksheet.generator.service';
+import { worksheetDslService, WorksheetDslGenerationParams } from '@/services/worksheet.dsl.service';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,7 +11,7 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { CheckedState } from '@radix-ui/react-checkbox';
 
 const WorksheetGeneratorPage: React.FC = () => {
-  const [formData, setFormData] = useState<WorksheetGenerationParams>({
+  const [formData, setFormData] = useState<WorksheetGenerationParams & WorksheetDslGenerationParams>({
     grade: '',
     subject: '',
     topic: '',
@@ -18,7 +19,14 @@ const WorksheetGeneratorPage: React.FC = () => {
     summary: '',
     numOfQuestions: 5,
     includeImages: false,
-    generateAnswerKey: false
+    generateAnswerKey: false,
+    // DSL-specific parameters
+    layoutType: 'grid',
+    rows: 2,
+    cols: 5,
+    theme: 'orange-white-black',
+    useDslApproach: true, // Flag to determine which API to use
+    randomizeItems: true // Flag to control randomization of worksheet items
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +123,18 @@ const WorksheetGeneratorPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await worksheetGeneratorService.generateWorksheet(formData);
+      let response;
+      
+      // Use the appropriate service based on the useDslApproach flag
+      if (formData.useDslApproach) {
+        // Use the DSL-based approach
+        const { useDslApproach, ...dslParams } = formData;
+        response = await worksheetDslService.generateWorksheetDsl(dslParams);
+      } else {
+        // Use the legacy approach
+        response = await worksheetGeneratorService.generateWorksheet(formData);
+      }
+      
       setDownloadUrl(response.downloadUrl || null);
       setAnswerKeyUrl(response.answerKeyUrl || null);
       setWorksheetPreviewUrl(response.worksheetPreviewUrl || null);
@@ -426,8 +445,141 @@ const WorksheetGeneratorPage: React.FC = () => {
                         className="w-5 h-5"
                       />
                     </div>
+                    
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <Label htmlFor="useDslApproach" className="text-sm font-semibold text-gray-800">Use Advanced Generation</Label>
+                          <p className="text-xs text-gray-500">Use structured approach for better consistency</p>
+                        </div>
+                      </div>
+                      <Checkbox
+                        id="useDslApproach"
+                        checked={formData.useDslApproach}
+                        onCheckedChange={(checked) => handleCheckboxChange('useDslApproach', checked)}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-gray-100 hover:border-yellow-200 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <Label htmlFor="randomizeItems" className="text-sm font-semibold text-gray-800">Randomize Questions</Label>
+                          <p className="text-xs text-gray-500">Mix up question order to prevent guessing</p>
+                        </div>
+                      </div>
+                      <Checkbox
+                        id="randomizeItems"
+                        checked={formData.randomizeItems}
+                        onCheckedChange={(checked) => handleCheckboxChange('randomizeItems', checked)}
+                        className="w-5 h-5"
+                      />
+                    </div>
                   </div>
                 </div>
+                
+                {/* Advanced Layout Settings (only shown when DSL approach is enabled) */}
+                {formData.useDslApproach && (
+                  <div className="bg-blue-50 rounded-xl p-6 space-y-4 border-2 border-dashed border-blue-200">
+                    <h3 className="text-lg font-semibold text-blue-800 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                      </svg>
+                      Advanced Layout Settings
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Layout Type */}
+                      <div className="space-y-2">
+                        <Label htmlFor="layoutType" className="text-sm font-semibold text-blue-800">Layout Type</Label>
+                        <Select 
+                          name="layoutType" 
+                          onValueChange={(value: string) => handleSelectChange('layoutType', value)} 
+                          value={formData.layoutType}
+                        >
+                          <SelectTrigger className="h-12 border-2 border-blue-200 hover:border-blue-300 focus:border-blue-500 transition-colors">
+                            <SelectValue placeholder="Choose layout type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="grid" className="py-2">Grid Layout</SelectItem>
+                            <SelectItem value="list" className="py-2">List Layout</SelectItem>
+                            <SelectItem value="columns" className="py-2">Columns Layout</SelectItem>
+                            <SelectItem value="free" className="py-2">Free Layout</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Theme */}
+                      <div className="space-y-2">
+                        <Label htmlFor="theme" className="text-sm font-semibold text-blue-800">Color Theme</Label>
+                        <Select 
+                          name="theme" 
+                          onValueChange={(value: string) => handleSelectChange('theme', value)} 
+                          value={formData.theme}
+                        >
+                          <SelectTrigger className="h-12 border-2 border-blue-200 hover:border-blue-300 focus:border-blue-500 transition-colors">
+                            <SelectValue placeholder="Choose color theme" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="orange-white-black" className="py-2">Orange Theme</SelectItem>
+                            <SelectItem value="blue-white-gray" className="py-2">Blue Theme</SelectItem>
+                            <SelectItem value="green-white-black" className="py-2">Green Theme</SelectItem>
+                            <SelectItem value="purple-white-gray" className="py-2">Purple Theme</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    {/* Grid Settings (only shown for grid layout) */}
+                    {formData.layoutType === 'grid' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-blue-200">
+                        {/* Rows */}
+                        <div className="space-y-2">
+                          <Label htmlFor="rows" className="text-sm font-semibold text-blue-800">Number of Rows</Label>
+                          <Input
+                            type="number"
+                            id="rows"
+                            name="rows"
+                            value={formData.rows}
+                            onChange={handleInputChange}
+                            min="1"
+                            max="10"
+                            className="h-12 border-2 border-blue-200 hover:border-blue-300 focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                        
+                        {/* Columns */}
+                        <div className="space-y-2">
+                          <Label htmlFor="cols" className="text-sm font-semibold text-blue-800">Number of Columns</Label>
+                          <Input
+                            type="number"
+                            id="cols"
+                            name="cols"
+                            value={formData.cols}
+                            onChange={handleInputChange}
+                            min="1"
+                            max="10"
+                            className="h-12 border-2 border-blue-200 hover:border-blue-300 focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-blue-600 mt-2">
+                      💡 Advanced settings provide more control over worksheet layout and appearance.
+                    </p>
+                  </div>
+                )}
                 
                 {/* Generate Button */}
                 <div className="pt-6">
